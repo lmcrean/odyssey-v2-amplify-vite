@@ -5,7 +5,7 @@ const TailwindTest = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-4">
           Tailwind CSS Test
         </h1>
-        <p className="text-gray-600 hover:text-blue-500 transition-colors">
+        <p className="text-red-600 hover:text-blue-500 transition-colors">
           If you can see this styled nicely, Tailwind is working! 🎉
         </p>
       </div>
