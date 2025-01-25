@@ -1,9 +1,9 @@
-import TailwindTest from './components/TailwindTest'
+import AuthComponent from './components/AuthComponent';
 
 function App() {
   return (
     <div>
-      <TailwindTest />
+      <AuthComponent />
     </div>
   );
 }
