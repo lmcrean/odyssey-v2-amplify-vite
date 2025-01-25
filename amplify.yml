@@ -10,7 +10,7 @@ frontend:
     preBuild:
       commands:
         - npm ci
-        - npm install @rollup/rollup-linux-x64-gnu
+        - npm install @rollup/rollup-linux-x64-gnu @rollup/rollup-linux-x64-musl
     build:
       commands:
         - npm run build
