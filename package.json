@@ -19,6 +19,7 @@
     "@aws-amplify/backend": "^1.14.0",
     "@aws-amplify/backend-cli": "^1.4.8",
     "@aws-amplify/cli": "^12.14.1",
+    "@parcel/watcher": "^2.5.0",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
