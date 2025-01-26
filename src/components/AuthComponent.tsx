@@ -45,6 +45,8 @@ function AuthComponent() {
         <button
           onClick={handleSignOut}
           className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded w-full"
+          role="button"
+          aria-label="Sign Out"
         >
           Sign Out
         </button>
@@ -52,6 +54,8 @@ function AuthComponent() {
         <button
           onClick={() => setShowDeleteModal(true)}
           className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded w-full"
+          role="button"
+          aria-label="Delete Account"
         >
           Delete Account
         </button>
@@ -69,12 +73,16 @@ function AuthComponent() {
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+                role="button"
+                aria-label="Cancel"
               >
                 Cancel
               </button>
               <button
                 onClick={handleDeleteAccount}
                 className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
+                role="button"
+                aria-label="Confirm"
               >
                 Confirm
               </button>
