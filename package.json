@@ -14,6 +14,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:prod": "cross-env PLAYWRIGHT_BASE_URL=https://main.d1l70uc5e2kcii.amplifyapp.com playwright test",
+    "test:e2e:auth": "playwright test e2e/auth/auth.spec.ts",
+    "test:e2e:button-modal": "playwright test e2e/delete-account/delete-account-button-and-modal.spec.ts",
+    "test:e2e:delete-success": "playwright test e2e/delete-account/delete-account-success.spec.ts",
     "create-test-user": "node scripts/create-test-user.js",
     "check-test-user": "node scripts/check-test-user.js"
   },
@@ -43,7 +46,6 @@
     "aws-cdk-lib": "^2.138.0",
     "constructs": "^10.3.0",
     "cross-env": "^7.0.3",
-    "dotenv": "^16.4.7",
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
