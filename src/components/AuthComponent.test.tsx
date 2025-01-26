@@ -1,10 +1,26 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { withAuthenticator, useAuthenticator } from '@aws-amplify/ui-react';
+import { toast } from 'react-toastify';
 import AuthComponent from './AuthComponent';
 
 const mockSignOut = vi.fn();
 const mockToSignIn = vi.fn();
+const mockToast = {
+  info: vi.fn(),
+  success: vi.fn(),
+  error: vi.fn(),
+};
+
+// Mock react-toastify
+vi.mock('react-toastify', () => ({
+  toast: {
+    info: vi.fn(),
+    success: vi.fn(),
+    error: vi.fn(),
+  },
+  ToastContainer: () => null,
+}));
 
 // Mock the Amplify authenticator
 vi.mock('@aws-amplify/ui-react', () => ({
@@ -32,8 +48,15 @@ const UnwrappedAuthComponent = () => {
   const { signOut, toSignIn } = useAuthenticator();
   
   const handleSignOut = async () => {
-    await signOut();
-    toSignIn();
+    try {
+      toast.info('Signing out...', { autoClose: 2000 });
+      await signOut();
+      toast.success('Successfully signed out!', { autoClose: 2000 });
+      toSignIn();
+    } catch (error) {
+      toast.error('Failed to sign out. Please try again.', { autoClose: 3000 });
+      console.error('Sign out error:', error);
+    }
   };
 
   return (
@@ -86,13 +109,32 @@ describe('AuthComponent', () => {
     expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
   });
 
-  it('calls signOut and redirects when logout button is clicked', async () => {
+  it('shows toast notifications during successful sign out', async () => {
+    mockSignOut.mockResolvedValueOnce(undefined);
+    
     render(<AuthComponent />);
     const logoutButton = screen.getByRole('button', { name: /sign out/i });
     
     await fireEvent.click(logoutButton);
     
+    expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
+    expect(toast.success).toHaveBeenCalledWith('Successfully signed out!', expect.any(Object));
     expect(mockSignOut).toHaveBeenCalled();
     expect(mockToSignIn).toHaveBeenCalled();
+  });
+
+  it('shows error toast when sign out fails', async () => {
+    const error = new Error('Sign out failed');
+    mockSignOut.mockRejectedValueOnce(error);
+    
+    render(<AuthComponent />);
+    const logoutButton = screen.getByRole('button', { name: /sign out/i });
+    
+    await fireEvent.click(logoutButton);
+    
+    expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
+    expect(toast.error).toHaveBeenCalledWith('Failed to sign out. Please try again.', expect.any(Object));
+    expect(mockSignOut).toHaveBeenCalled();
+    expect(mockToSignIn).not.toHaveBeenCalled();
   });
 });
