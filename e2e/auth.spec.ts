@@ -4,14 +4,13 @@ import { test, expect } from '@playwright/test';
 test.beforeEach(async ({ page }) => {
   // Enable console logging for debugging
   page.on('console', msg => console.log(msg.text()));
+  // Navigate to the page before each test
+  await page.goto('/');
+  // Wait for Amplify UI to initialize with longer timeout
+  await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
 });
 
 test('shows login form on initial load', async ({ page }) => {
-  await page.goto('/');
-  
-  // Wait for Amplify UI to initialize with longer timeout
-  await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
-  
   // Take a screenshot for debugging
   await page.screenshot({ path: 'test-results/login-form.png' });
   
@@ -26,9 +25,6 @@ test('shows login form on initial load', async ({ page }) => {
 });
 
 test('shows create account form', async ({ page }) => {
-  await page.goto('/');
-  await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
-  
   // Find and click the create account button/link
   await page.getByText(/Create account/i).click();
   
@@ -43,10 +39,7 @@ test('shows create account form', async ({ page }) => {
 });
 
 test('shows reset password form', async ({ page }) => {
-  await page.goto('/');
-  
-  // Wait for Amplify UI to initialize and sign-in form to be fully loaded
-  await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
+  // Wait for sign-in form to be fully loaded
   await page.waitForLoadState('networkidle');
   
   // Wait for and click the "Forgot your password?" link
