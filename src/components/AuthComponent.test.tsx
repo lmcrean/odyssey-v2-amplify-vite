@@ -4,6 +4,7 @@ import { withAuthenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import AuthComponent from './AuthComponent';
 
 const mockSignOut = vi.fn();
+const mockToSignIn = vi.fn();
 
 // Mock the Amplify authenticator
 vi.mock('@aws-amplify/ui-react', () => ({
@@ -14,11 +15,11 @@ vi.mock('@aws-amplify/ui-react', () => ({
   }),
   useAuthenticator: vi.fn(() => ({
     signOut: mockSignOut,
+    toSignIn: mockToSignIn,
     user: null,
     route: 'authenticated',
     toFederatedSignIn: vi.fn(),
     toResetPassword: vi.fn(),
-    toSignIn: vi.fn(),
     toSignUp: vi.fn(),
     updateUser: vi.fn(),
     setUser: vi.fn(),
@@ -28,11 +29,17 @@ vi.mock('@aws-amplify/ui-react', () => ({
 
 // Get the unwrapped component for testing
 const UnwrappedAuthComponent = () => {
-  const { signOut } = useAuthenticator();
+  const { signOut, toSignIn } = useAuthenticator();
+  
+  const handleSignOut = async () => {
+    await signOut();
+    toSignIn();
+  };
+
   return (
     <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Hello, authenticated user!</h1>
-      <button onClick={signOut}>Sign Out</button>
+      <button onClick={handleSignOut}>Sign Out</button>
     </div>
   );
 };
@@ -79,11 +86,13 @@ describe('AuthComponent', () => {
     expect(screen.getByRole('button', { name: /sign out/i })).toBeInTheDocument();
   });
 
-  it('calls signOut when logout button is clicked', async () => {
+  it('calls signOut and redirects when logout button is clicked', async () => {
     render(<AuthComponent />);
     const logoutButton = screen.getByRole('button', { name: /sign out/i });
     
     await fireEvent.click(logoutButton);
+    
     expect(mockSignOut).toHaveBeenCalled();
+    expect(mockToSignIn).toHaveBeenCalled();
   });
 });
