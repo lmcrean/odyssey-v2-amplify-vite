@@ -38,3 +38,6 @@ amplifytools.xcconfig
 .secret-*
 **.sample
 aws-exports.*
+
+# playwright report
+playwright-report
