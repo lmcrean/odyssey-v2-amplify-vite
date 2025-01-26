@@ -39,5 +39,9 @@ amplifytools.xcconfig
 **.sample
 aws-exports.*
 
-# playwright report
+# playwright report and test results
 playwright-report
+test-results/
+/test-results
+*.png
+last-run.json
