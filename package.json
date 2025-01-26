@@ -18,6 +18,8 @@
     "test:e2e:button-modal": "playwright test e2e/delete-account/delete-account-button-and-modal.spec.ts",
     "test:e2e:delete-success": "playwright test e2e/delete-account/delete-account-success.spec.ts",
     "test:e2e:button-modal:prod": "cross-env PLAYWRIGHT_BASE_URL=https://main.d1l70uc5e2kcii.amplifyapp.com playwright test e2e/delete-account/delete-account-button-and-modal.spec.ts",
+    "test:e2e:button": "playwright test e2e/delete-account/delete-account-button.spec.ts",
+    "test:e2e:button:prod": "cross-env PLAYWRIGHT_BASE_URL=https://main.d1l70uc5e2kcii.amplifyapp.com playwright test e2e/delete-account/delete-account-button.spec.ts",
     "create-test-user": "node scripts/create-test-user.js",
     "check-test-user": "node scripts/check-test-user.js"
   },
