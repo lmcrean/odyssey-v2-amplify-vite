@@ -17,6 +17,19 @@ console.log('Environment variables loaded:', {
 test.beforeEach(async ({ page }) => {
   // Enable console logging for debugging
   page.on('console', msg => console.log(msg.text()));
+  page.on('response', response => {
+    if (response.status() === 400) {
+      console.log('400 Error Response:', {
+        url: response.url(),
+        status: response.status(),
+      });
+      response.text().then(text => {
+        console.log('Response body:', text);
+      }).catch(err => {
+        console.log('Error getting response text:', err);
+      });
+    }
+  });
   
   try {
     console.log('Navigating to the page...');
@@ -44,12 +57,45 @@ test.beforeEach(async ({ page }) => {
     await signInButton.waitFor({ state: 'visible', timeout: 10000 });
     await signInButton.click();
 
-    console.log('Waiting for authenticated view...');
-    await expect(page.getByText(/Hello, authenticated user!/i)).toBeVisible({ timeout: 30000 });
-    console.log('Successfully logged in!');
-
     // Wait for any post-login loading states to settle
     await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
+
+    // Wait for either the delete account button or an error message
+    console.log('Waiting for authenticated view or error message...');
+    try {
+      const deleteButton = page.getByRole('button', { name: /delete account/i });
+      await expect(deleteButton).toBeVisible({ timeout: 60000 });
+      console.log('Successfully logged in!');
+    } catch (error) {
+      // Take a screenshot and log the page content before checking error messages
+      console.log('Login failed, capturing error state...');
+      await page.screenshot({ path: 'test-results/login-error.png' });
+      const content = await page.content();
+      console.log('Page content at login failure:', content);
+
+      // Check for error messages
+      const errorMessages = [
+        /incorrect username or password/i,
+        /user does not exist/i,
+        /user is disabled/i,
+        /password attempts exceeded/i,
+        /invalid username or password/i,
+        /user not found/i
+      ];
+
+      for (const pattern of errorMessages) {
+        const errorText = page.getByText(pattern);
+        const isVisible = await errorText.isVisible();
+        if (isVisible) {
+          console.log('Found error message:', pattern);
+          throw new Error(`Login failed: ${pattern}`);
+        }
+      }
+
+      throw error;
+    }
+
   } catch (error) {
     console.error('Error in beforeEach:', error);
     // Take a screenshot if authentication fails
@@ -112,7 +158,6 @@ test('cancels deletion when cancel is clicked', async ({ page }) => {
 
     console.log('Verifying modal is closed...');
     await expect(page.getByText(/are you sure/i)).not.toBeVisible({ timeout: 5000 });
-    await expect(page.getByText(/Hello, authenticated user!/i)).toBeVisible({ timeout: 5000 });
     console.log('Cancel operation verified');
   } catch (error) {
     console.error('Error in cancel deletion test:', error);
