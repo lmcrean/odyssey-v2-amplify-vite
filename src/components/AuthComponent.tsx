@@ -5,8 +5,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
 import { getCurrentUser, deleteUser } from 'aws-amplify/auth';
 
-function AuthComponent() {
-  const { signOut, toSignIn } = useAuthenticator();
+export const AuthComponent = () => {
+  const { route, signOut } = useAuthenticator((context) => [context.route]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const handleSignOut = async () => {
@@ -14,10 +14,8 @@ function AuthComponent() {
       toast.info('Signing out...', { autoClose: 2000 });
       await signOut();
       toast.success('Successfully signed out!', { autoClose: 2000 });
-      toSignIn();
     } catch (error) {
       toast.error('Failed to sign out. Please try again.', { autoClose: 3000 });
-      console.error('Sign out error:', error);
     }
   };
 
@@ -27,14 +25,16 @@ function AuthComponent() {
       await getCurrentUser(); // Verify user is authenticated
       await deleteUser();
       toast.success('Account successfully deleted!', { autoClose: 2000 });
-      toSignIn();
     } catch (error) {
       toast.error('Failed to delete account. Please try again.', { autoClose: 3000 });
-      console.error('Delete account error:', error);
     } finally {
       setShowDeleteModal(false);
     }
   };
+
+  if (route !== 'authenticated') {
+    return null;
+  }
 
   return (
     <div className="p-4">
@@ -92,6 +92,6 @@ function AuthComponent() {
       )}
     </div>
   );
-}
+};
 
 export default withAuthenticator(AuthComponent); 
