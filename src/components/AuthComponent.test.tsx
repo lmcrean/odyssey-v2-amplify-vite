@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { withAuthenticator, useAuthenticator } from '@aws-amplify/ui-react';
 import { toast } from 'react-toastify';
@@ -6,11 +6,6 @@ import AuthComponent from './AuthComponent';
 
 const mockSignOut = vi.fn();
 const mockToSignIn = vi.fn();
-const mockToast = {
-  info: vi.fn(),
-  success: vi.fn(),
-  error: vi.fn(),
-};
 
 // Mock react-toastify
 vi.mock('react-toastify', () => ({
