@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, act } from '@testing-library/react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { toast } from 'react-toastify';
 import AuthComponent from '../../../components/AuthComponent';
 import { withAuthenticator } from '../../mocks/auth/authenticator/components/withAuthenticator';
@@ -24,11 +24,12 @@ const TestComponent = withAuthenticator(AuthComponent);
 describe('User Lifecycle Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    cleanup();
   });
 
   it('handles signup, login, and account deletion flow', async () => {
     // Start with signup
-    render(<TestComponent _authStatus="unauthenticated" />);
+    const { unmount } = render(<TestComponent _authStatus="unauthenticated" />);
     
     // Click "Create Account" tab
     const createAccountTab = screen.getByRole('tab', { name: /create account/i });
@@ -56,8 +57,11 @@ describe('User Lifecycle Integration', () => {
       password: 'TestPassword123!',
     });
 
+    // Clean up previous render
+    unmount();
+
     // Re-render to reflect authenticated state
-    render(<TestComponent _authStatus="authenticated" />);
+    render(<TestComponent _authStatus="authenticated" _route="authenticated" />);
 
     // Verify we see the authenticated view
     expect(screen.getByText(/hello, authenticated user/i)).toBeInTheDocument();
@@ -85,6 +89,10 @@ describe('User Lifecycle Integration', () => {
   describe('Account Creation', () => {
     beforeEach(() => {
       render(<TestComponent _authStatus="unauthenticated" />);
+    });
+
+    afterEach(() => {
+      cleanup();
     });
 
     it('allows user to navigate to sign up form', async () => {
@@ -152,6 +160,10 @@ describe('User Lifecycle Integration', () => {
   describe('Account Management', () => {
     beforeEach(() => {
       render(<TestComponent _authStatus="authenticated" />);
+    });
+
+    afterEach(() => {
+      cleanup();
     });
 
     it('allows user to delete their account', async () => {
