@@ -3,6 +3,7 @@ import { useAuthContext } from '../context/AuthContext';
 import { mockSignIn } from '../../amplify/authentication/signIn';
 import { mockSignUp } from '../../amplify/registration/signUp';
 import { toast } from 'react-toastify';
+import { SignInInput, SignUpInput } from '../../types/auth.types';
 
 export const AuthenticatorForm: React.FC = () => {
   const { route, toSignIn, toSignUp, setAuthStatus, setRoute } = useAuthContext();
@@ -12,17 +13,19 @@ export const AuthenticatorForm: React.FC = () => {
     e.preventDefault();
     try {
       if (route === 'signUp') {
-        await mockSignUp({
+        const signUpInput: SignUpInput = {
           username: formData.username,
           password: formData.password,
-        });
+        };
+        await mockSignUp(signUpInput);
         setAuthStatus('authenticated');
         setRoute('authenticated');
       } else {
-        await mockSignIn({
+        const signInInput: SignInInput = {
           username: formData.username,
           password: formData.password,
-        });
+        };
+        await mockSignIn(signInInput);
         setAuthStatus('authenticated');
         setRoute('authenticated');
       }
