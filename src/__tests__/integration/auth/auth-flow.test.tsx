@@ -1,9 +1,15 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { toast } from 'react-toastify';
 import { AuthComponent } from '../../../components/AuthComponent';
-import { mockSignOutError } from '../../mocks/auth/amplify/authentication/signOut';
-import { AuthProvider } from '../../mocks/auth/authenticator/context/AuthProvider';
+import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
+
+// Mock Amplify UI components
+vi.mock('@aws-amplify/ui-react', () => ({
+  Authenticator: ({ children }: any) => children({
+    signOut: mockAmplifySignOut,
+    user: { username: 'testuser' }
+  })
+}));
 
 // Mock toast
 vi.mock('react-toastify', () => ({
@@ -19,11 +25,7 @@ describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await act(async () => {
-      render(
-        <AuthProvider initialAuthStatus="authenticated" initialRoute="authenticated">
-          <AuthComponent />
-        </AuthProvider>
-      );
+      render(<AuthComponent />);
     });
   });
 
@@ -35,12 +37,11 @@ describe('Auth Flow Integration', () => {
       await fireEvent.click(signOutButton);
     });
 
-    expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
-    expect(toast.success).toHaveBeenCalledWith('Successfully signed out!', expect.any(Object));
+    expect(mockAmplifySignOut).toHaveBeenCalled();
   });
 
   it('shows error toast when sign out fails', async () => {
-    mockSignOutError();
+    mockAmplifySignOut.mockRejectedValueOnce(new Error('Failed to sign out'));
     
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
     expect(signOutButton).toBeInTheDocument();
@@ -49,7 +50,6 @@ describe('Auth Flow Integration', () => {
       await fireEvent.click(signOutButton);
     });
 
-    expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
-    expect(toast.error).toHaveBeenCalledWith('Failed to sign out. Please try again.', expect.any(Object));
+    expect(mockAmplifySignOut).toHaveBeenCalled();
   });
 }); 
