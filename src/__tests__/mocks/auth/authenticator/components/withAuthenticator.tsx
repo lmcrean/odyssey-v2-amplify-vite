@@ -12,7 +12,7 @@ interface WithAuthenticatorProps {
 
 export const withAuthenticator = (Component: React.ComponentType<any>) => {
   return function WrappedWithAuthenticator(props: WithAuthenticatorProps) {
-    const { _authStatus = 'authenticated', _route = 'authenticated', ...rest } = props;
+    const { _authStatus = 'unauthenticated', _route = 'signIn', ...rest } = props;
     
     return (
       <AuthProvider
@@ -21,6 +21,8 @@ export const withAuthenticator = (Component: React.ComponentType<any>) => {
       >
         <AuthenticatorWrapper
           Component={Component}
+          _authStatus={_authStatus}
+          _route={_route}
           {...rest}
         />
       </AuthProvider>
