@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { toast } from 'react-toastify';
-import AuthComponent from '../../../components/AuthComponent';
+import { AuthComponent } from '../../../components/AuthComponent';
 import { withAuthenticator } from '../../mocks/auth/authenticator/components/withAuthenticator';
 import { mockSignIn, mockSignInError } from '../../mocks/auth/amplify/authentication/signIn';
 import { mockSignUp, mockSignUpError } from '../../mocks/auth/amplify/registration/signUp';
