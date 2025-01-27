@@ -15,7 +15,7 @@ test.describe('Unauthenticated View', () => {
     await expect(body).toBeVisible();
     
     // Now look for the form
-    const form = page.locator('[data-testid="authenticator-form"]');
+    const form = page.locator('form[data-amplify-form][data-amplify-authenticator-signin]');
     await expect(form).toBeVisible();
     
     // Check for sign in tab
@@ -28,18 +28,20 @@ test.describe('Unauthenticated View', () => {
     await expect(createAccountTab).toBeVisible();
     await expect(createAccountTab).toHaveAttribute('aria-selected', 'false');
     
-    // Check for username input
+    // Check for username/email input
     const usernameInput = page.locator('input[name="username"]');
     await expect(usernameInput).toBeVisible();
+    await expect(usernameInput).toHaveAttribute('type', 'email');
     
     // Check for password input
     const passwordInput = page.locator('input[name="password"]');
     await expect(passwordInput).toBeVisible();
+    await expect(passwordInput).toHaveAttribute('type', 'password');
     
     // Check for sign in button
     const signInButton = page.locator('button[type="submit"]');
     await expect(signInButton).toBeVisible();
-    await expect(signInButton).toHaveText('Sign In');
+    await expect(signInButton).toHaveText(/Sign in/i);
   });
 
   test('allows tab navigation', async ({ page }) => {
