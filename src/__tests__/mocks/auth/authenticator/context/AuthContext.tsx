@@ -5,9 +5,11 @@ interface AuthContextType {
   route: AuthRoute;
   authStatus: AuthStatus;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   toSignIn: () => void;
   toSignUp: () => void;
   setAuthStatus: (status: AuthStatus) => void;
+  setRoute: (route: AuthRoute) => void;
   isAuthenticated: boolean;
 }
 
@@ -15,9 +17,11 @@ const AuthContext = createContext<AuthContextType>({
   route: 'signIn',
   authStatus: 'unauthenticated',
   signOut: async () => {},
+  deleteAccount: async () => {},
   toSignIn: () => {},
   toSignUp: () => {},
   setAuthStatus: () => {},
+  setRoute: () => {},
   isAuthenticated: false,
 });
 
