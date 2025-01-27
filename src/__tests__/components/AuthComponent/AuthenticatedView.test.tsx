@@ -1,24 +1,8 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-
-
-// Mock AWS Amplify auth functions
-vi.mock('aws-amplify/auth', () => ({
-  getCurrentUser: vi.fn().mockResolvedValue({ username: 'testuser' }),
-  deleteUser: vi.fn().mockResolvedValue(undefined),
-}));
-
-// Create mock functions
-const mockSignOut = vi.fn().mockResolvedValue(undefined);
-
-// Mock AWS Amplify UI React components
-vi.mock('@aws-amplify/ui-react', () => ({
-  withAuthenticator: (Component: any) => Component,
-  useAuthenticator: () => ({
-    route: 'authenticated',
-    signOut: mockSignOut,
-  }),
-}));
+import { toast } from 'react-toastify';
+import { AuthComponent } from '../../../components/AuthComponent';
+import { AuthProvider } from '../../mocks/auth/authenticator/context/AuthProvider';
 
 // Mock toast notifications
 vi.mock('react-toastify', () => ({
@@ -30,13 +14,15 @@ vi.mock('react-toastify', () => ({
   ToastContainer: () => null,
 }));
 
-import AuthComponent from '../../../components/AuthComponent';
-
 describe('Authenticated View', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     act(() => {
-      render(<AuthComponent />);
+      render(
+        <AuthProvider initialAuthStatus="authenticated" initialRoute="authenticated">
+          <AuthComponent />
+        </AuthProvider>
+      );
     });
   });
 
@@ -54,7 +40,9 @@ describe('Authenticated View', () => {
       await act(async () => {
         fireEvent.click(signOutButton);
       });
-      expect(mockSignOut).toHaveBeenCalledTimes(1);
+      
+      expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
+      expect(toast.success).toHaveBeenCalledWith('Successfully signed out!', expect.any(Object));
     });
 
     it('renders and handles delete account button with modal flow', async () => {
@@ -85,9 +73,8 @@ describe('Authenticated View', () => {
         fireEvent.click(confirmButton);
       });
       
-      const { getCurrentUser, deleteUser } = await import('aws-amplify/auth');
-      expect(getCurrentUser).toHaveBeenCalledTimes(1);
-      expect(deleteUser).toHaveBeenCalledTimes(1);
+      expect(toast.info).toHaveBeenCalledWith('Deleting account...', expect.any(Object));
+      expect(toast.success).toHaveBeenCalledWith('Account successfully deleted!', { autoClose: 2000 });
     });
   });
 }); 
