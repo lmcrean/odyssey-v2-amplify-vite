@@ -2,7 +2,6 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'react-toastify';
 import AuthComponent from '../../../components/AuthComponent';
-import { withAuthenticator } from '../../mocks/auth/authenticator/components/withAuthenticator';
 import { mockSignOut, mockSignOutError } from '../../mocks/auth/amplify/authentication/signOut';
 
 // Mock toast
@@ -15,19 +14,26 @@ vi.mock('react-toastify', () => ({
   ToastContainer: () => null,
 }));
 
-// Create a wrapped component for testing
-const TestComponent = withAuthenticator(AuthComponent);
+// Mock @aws-amplify/ui-react
+vi.mock('@aws-amplify/ui-react', () => ({
+  withAuthenticator: (Component: any) => Component,
+  useAuthenticator: () => ({
+    route: 'authenticated',
+    signOut: mockSignOut,
+  }),
+}));
 
 describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await act(async () => {
-      render(<TestComponent _authStatus="authenticated" />);
+      render(<AuthComponent />);
     });
   });
 
   it('shows toast notifications during successful sign out', async () => {
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
+    expect(signOutButton).toBeInTheDocument();
     
     await act(async () => {
       await fireEvent.click(signOutButton);
@@ -42,6 +48,7 @@ describe('Auth Flow Integration', () => {
     mockSignOutError();
     
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
+    expect(signOutButton).toBeInTheDocument();
     
     await act(async () => {
       await fireEvent.click(signOutButton);
