@@ -12,21 +12,19 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({
   children,
   initialAuthStatus = 'unauthenticated',
-  initialRoute
+  initialRoute = 'signIn'
 }) => {
   const [authStatus, setAuthStatus] = useState<AuthStatus>(initialAuthStatus);
-  const [route, setRoute] = useState<AuthRoute>(
-    initialRoute || (initialAuthStatus === 'authenticated' ? 'authenticated' : 'signIn')
-  );
+  const [route, setRoute] = useState<AuthRoute>(initialRoute);
 
-  // Ensure route stays in sync with auth status
+  // Keep state in sync with props
   useEffect(() => {
-    if (authStatus === 'authenticated') {
-      setRoute('authenticated');
-    } else {
-      setRoute('signIn');
-    }
-  }, [authStatus]);
+    setAuthStatus(initialAuthStatus);
+  }, [initialAuthStatus]);
+
+  useEffect(() => {
+    setRoute(initialRoute);
+  }, [initialRoute]);
 
   const signOut = async () => {
     try {
@@ -51,12 +49,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
       value={{
         route,
         authStatus,
+        setAuthStatus,
         signOut,
         toSignIn,
         toSignUp,
-        setAuthStatus: (status: AuthStatus) => {
-          setAuthStatus(status);
-        },
+        setRoute,
         isAuthenticated: authStatus === 'authenticated'
       }}
     >
