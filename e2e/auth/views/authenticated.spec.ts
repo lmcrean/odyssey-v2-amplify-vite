@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { fillSignInForm, clickSignIn, clickSignOut, clickDeleteAccount } from '../../../utils/auth/form';
-import validUser from '../../../fixtures/user/valid.json';
+import { fillSignInForm, clickSignIn, clickSignOut, clickDeleteAccount } from '../../utils/auth/form';
 
 test.describe('Authenticated View', () => {
   test.beforeEach(async ({ page }) => {
     // Start from home and sign in
     await page.goto('/');
-    await fillSignInForm(page, validUser.email, validUser.password);
+    await fillSignInForm(page, process.env.TEST_USER_EMAIL!, process.env.TEST_USER_PASSWORD!);
     await clickSignIn(page);
     
     // Wait for authenticated view to load
