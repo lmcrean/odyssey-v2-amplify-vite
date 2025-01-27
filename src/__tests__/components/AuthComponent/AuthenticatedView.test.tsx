@@ -32,7 +32,7 @@ describe('Authenticated View', () => {
     });
   });
 
-  describe('Action Buttons', () => {
+  describe('User Actions', () => {
     it('renders and handles sign out button', async () => {
       const signOutButton = screen.getByRole('button', { name: /sign out/i });
       expect(signOutButton).toBeInTheDocument();
