@@ -15,20 +15,20 @@ console.log('Environment variables loaded:', {
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  retries: process.env.CI ? 2 : 1,
+  workers: 1,
+  reporter: [['html'], ['list']],
   use: {
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
-    // Add timeouts
+    video: 'retain-on-failure',
     actionTimeout: 15000,
     navigationTimeout: 15000,
-    // Add viewport size
     viewport: { width: 1280, height: 720 },
+    testIdAttribute: 'data-testid',
   },
 
   projects: [
@@ -51,8 +51,8 @@ export default defineConfig({
     command: 'npm run dev',
     url: 'http://localhost:5173',
     reuseExistingServer: !process.env.CI,
-    timeout: 120000, // Increase timeout for dev server startup
-    stdout: 'pipe', // Pipe the output to see what's happening
-    stderr: 'pipe', // Pipe the errors to see what's happening
+    timeout: 120000,
+    stdout: 'pipe',
+    stderr: 'pipe',
   },
 }); 
