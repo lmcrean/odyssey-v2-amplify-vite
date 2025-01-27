@@ -72,7 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({
         deleteAccount,
         toSignIn,
         toSignUp,
-        setRoute
+        setRoute,
+        isAuthenticated: authStatus === 'authenticated',
       }}
     >
       {children}

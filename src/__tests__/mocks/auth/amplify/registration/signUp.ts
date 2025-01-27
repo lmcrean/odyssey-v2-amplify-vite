@@ -3,6 +3,7 @@ import { SignUpInput, SignUpOutput } from '../../types/auth.types';
 import { toast } from 'react-toastify';
 
 export const mockSignUp = vi.fn((input: SignUpInput): Promise<SignUpOutput> => {
+  console.log('Mock SignUp called with:', input);
   toast.info('Creating account...', { autoClose: 2000 });
   return Promise.resolve().then(() => {
     const result = {

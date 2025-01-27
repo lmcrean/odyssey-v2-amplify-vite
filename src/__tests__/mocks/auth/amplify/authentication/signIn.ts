@@ -3,6 +3,7 @@ import { SignInInput, SignInOutput } from '../../types/auth.types';
 import { toast } from 'react-toastify';
 
 export const mockSignIn = vi.fn((input: SignInInput): Promise<SignInOutput> => {
+  console.log('Mock SignIn called with:', input);
   toast.info('Signing in...', { autoClose: 2000 });
   return Promise.resolve().then(() => {
     const result = {

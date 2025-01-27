@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { toast } from 'react-toastify';
 
-export const mockSignOut = vi.fn<[], Promise<void>>().mockImplementation(async () => {
+export const mockSignOut = vi.fn().mockImplementation(async () => {
   toast.info('Signing out...', { autoClose: 2000 });
   try {
     await Promise.resolve();

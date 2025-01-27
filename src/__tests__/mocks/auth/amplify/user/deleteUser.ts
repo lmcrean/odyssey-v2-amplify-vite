@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { toast } from 'react-toastify';
 
-export const mockDeleteUser = vi.fn<[], Promise<void>>().mockImplementation(async () => {
+export const mockDeleteUser = vi.fn().mockImplementation(async () => {
   toast.info('Deleting account...', { autoClose: 2000 });
   try {
     await Promise.resolve();
