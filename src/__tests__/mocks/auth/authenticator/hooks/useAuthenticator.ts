@@ -1,5 +1,5 @@
 import { useAuthContext } from '../context/AuthContext';
-import { mockSignIn } from '../../amplify/authentication/signIn';
+import { mockSignOut } from '../../amplify/authentication/signOut';
 import { mockSignUp } from '../../amplify/registration/signUp';
 import { mockConfirmSignUp } from '../../amplify/registration/confirmSignUp';
 import { mockGetCurrentUser } from '../../amplify/user/getCurrentUser';
@@ -9,7 +9,7 @@ export const useAuthenticator = (selector?: (context: any) => any) => {
 
   const extendedContext = {
     ...context,
-    signIn: mockSignIn,
+    signOut: mockSignOut,
     signUp: mockSignUp,
     confirmSignUp: mockConfirmSignUp,
     getCurrentUser: mockGetCurrentUser,
@@ -17,6 +17,7 @@ export const useAuthenticator = (selector?: (context: any) => any) => {
     hasValidationErrors: false,
     validationErrors: {},
     isPending: false,
+    route: context.isAuthenticated ? 'authenticated' : 'signIn',
     updateAuthStatus: context.setAuthStatus,
     updateCredentials: () => {},
     submitForm: () => {},
