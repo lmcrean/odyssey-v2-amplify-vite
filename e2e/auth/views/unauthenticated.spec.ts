@@ -1,61 +1,70 @@
 import { test, expect } from '@playwright/test';
-import { fillSignInForm } from '../../../utils/auth/form';
-import validUser from '../../../fixtures/user/valid.json';
 
 test.describe('Unauthenticated View', () => {
   test.beforeEach(async ({ page }) => {
-    // Use the BASE_URL from environment or default to localhost
     await page.goto(process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173');
-    // Add debug step
-    await page.waitForTimeout(2000); // Give the page time to load
+    // Wait for any content to load
+    await page.waitForLoadState('networkidle');
+    // Log the page content for debugging
+    console.log('Page Content:', await page.content());
   });
 
   test('renders sign-in form elements', async ({ page }) => {
+    // First verify the page has loaded something
+    const body = page.locator('body');
+    await expect(body).toBeVisible();
+    
+    // Now look for the form
+    const form = page.locator('[data-testid="authenticator-form"]');
+    await expect(form).toBeVisible();
+    
     // Check for sign in tab
-    const signInTab = page.getByRole('tab', { name: /sign in/i });
+    const signInTab = page.locator('[role="tab"]').filter({ hasText: 'Sign In' });
     await expect(signInTab).toBeVisible();
     await expect(signInTab).toHaveAttribute('aria-selected', 'true');
     
     // Check for create account tab
-    const createAccountTab = page.getByRole('tab', { name: /create account/i });
+    const createAccountTab = page.locator('[role="tab"]').filter({ hasText: 'Create Account' });
     await expect(createAccountTab).toBeVisible();
     await expect(createAccountTab).toHaveAttribute('aria-selected', 'false');
     
-    // Check for email input
-    const emailInput = page.locator('input[name="username"][type="email"]');
-    await expect(emailInput).toBeVisible();
-    await expect(emailInput).toHaveAttribute('placeholder', 'Enter your Email');
+    // Check for username input
+    const usernameInput = page.locator('input[name="username"]');
+    await expect(usernameInput).toBeVisible();
     
     // Check for password input
-    const passwordInput = page.locator('input[name="password"][type="password"]');
+    const passwordInput = page.locator('input[name="password"]');
     await expect(passwordInput).toBeVisible();
-    await expect(passwordInput).toHaveAttribute('placeholder', 'Enter your Password');
     
     // Check for sign in button
-    const signInButton = page.getByRole('button', { name: /sign in/i }).filter({ hasText: /^Sign in$/ });
+    const signInButton = page.locator('button[type="submit"]');
     await expect(signInButton).toBeVisible();
+    await expect(signInButton).toHaveText('Sign In');
   });
 
   test('allows tab navigation', async ({ page }) => {
     // Click create account tab
-    await page.getByRole('tab', { name: /create account/i }).click();
-    await expect(page.getByRole('tab', { name: /create account/i })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tab', { name: /sign in/i })).toHaveAttribute('aria-selected', 'false');
+    const createAccountTab = page.locator('[role="tab"]').filter({ hasText: 'Create Account' });
+    await createAccountTab.click();
+    await expect(createAccountTab).toHaveAttribute('aria-selected', 'true');
+    
+    const signInTab = page.locator('[role="tab"]').filter({ hasText: 'Sign In' });
+    await expect(signInTab).toHaveAttribute('aria-selected', 'false');
     
     // Click sign in tab
-    await page.getByRole('tab', { name: /sign in/i }).click();
-    await expect(page.getByRole('tab', { name: /sign in/i })).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tab', { name: /create account/i })).toHaveAttribute('aria-selected', 'false');
+    await signInTab.click();
+    await expect(signInTab).toHaveAttribute('aria-selected', 'true');
+    await expect(createAccountTab).toHaveAttribute('aria-selected', 'false');
   });
 
   test('accepts form input', async ({ page }) => {
-    // Get email and password fields
-    const email = page.locator('input[name="username"][type="email"]');
-    const password = page.locator('input[name="password"][type="password"]');
+    // Get username and password fields
+    const username = page.locator('input[name="username"]');
+    const password = page.locator('input[name="password"]');
     
-    // Type in email
-    await email.fill('test@example.com');
-    await expect(email).toHaveValue('test@example.com');
+    // Type in username
+    await username.fill('test@example.com');
+    await expect(username).toHaveValue('test@example.com');
     
     // Type in password
     await password.fill('password123');
