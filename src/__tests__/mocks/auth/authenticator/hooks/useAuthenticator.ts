@@ -6,6 +6,7 @@ import { mockGetCurrentUser } from '../../amplify/user/getCurrentUser';
 
 export const useAuthenticator = (selector?: (context: any) => any) => {
   const context = useAuthContext();
+  const isAuthenticated = context.authStatus === 'authenticated';
 
   const extendedContext = {
     ...context,
@@ -13,11 +14,11 @@ export const useAuthenticator = (selector?: (context: any) => any) => {
     signUp: mockSignUp,
     confirmSignUp: mockConfirmSignUp,
     getCurrentUser: mockGetCurrentUser,
-    user: context.isAuthenticated ? { username: 'testuser', userId: 'test-user-id' } : null,
+    user: isAuthenticated ? { username: 'testuser', userId: 'test-user-id' } : null,
     hasValidationErrors: false,
     validationErrors: {},
     isPending: false,
-    route: context.isAuthenticated ? 'authenticated' : 'signIn',
+    route: isAuthenticated ? 'authenticated' : 'signIn',
     updateAuthStatus: context.setAuthStatus,
     updateCredentials: () => {},
     submitForm: () => {},
