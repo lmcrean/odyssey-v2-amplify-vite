@@ -56,4 +56,49 @@ test.describe('Basic App Setup', () => {
     const realErrors = errors.filter(error => !error.includes('Module "util" has been externalized'));
     expect(realErrors).toEqual([]);
   });
+
+  test('Tailwind CSS and theme are working correctly', async ({ page }) => {
+    // Navigate to the Tailwind test page
+    const baseUrl = process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173';
+    await page.goto(`${baseUrl}/tailwind-test`);
+    await page.waitForLoadState('networkidle');
+
+    // Get the container div with gradient background and verify its classes
+    const container = page.locator('[data-testid="tailwind-container"]');
+    await expect(container).toBeVisible();
+    const containerClasses = await container.getAttribute('class');
+    expect(containerClasses).toMatch(/min-h-screen/);
+    expect(containerClasses).toMatch(/bg-gradient-to-r/);
+    expect(containerClasses).toMatch(/from-blue-500/);
+    expect(containerClasses).toMatch(/to-purple-500/);
+    expect(containerClasses).toMatch(/flex/);
+    expect(containerClasses).toMatch(/items-center/);
+    expect(containerClasses).toMatch(/justify-center/);
+
+    // Get the white card container and verify its classes
+    const card = page.locator('[data-testid="tailwind-card"]');
+    await expect(card).toBeVisible();
+    const cardClasses = await card.getAttribute('class');
+    expect(cardClasses).toMatch(/bg-white/);
+    expect(cardClasses).toMatch(/p-8/);
+    expect(cardClasses).toMatch(/rounded-lg/);
+    expect(cardClasses).toMatch(/shadow-lg/);
+
+    // Get the heading and verify its classes
+    const heading = page.locator('h1');
+    await expect(heading).toBeVisible();
+    const headingClasses = await heading.getAttribute('class');
+    expect(headingClasses).toMatch(/text-3xl/);
+    expect(headingClasses).toMatch(/font-bold/);
+    expect(headingClasses).toMatch(/text-gray-800/);
+    expect(headingClasses).toMatch(/mb-4/);
+
+    // Get the paragraph and verify its classes
+    const paragraph = page.locator('p');
+    await expect(paragraph).toBeVisible();
+    const paragraphClasses = await paragraph.getAttribute('class');
+    expect(paragraphClasses).toMatch(/text-red-600/);
+    expect(paragraphClasses).toMatch(/hover:text-blue-500/);
+    expect(paragraphClasses).toMatch(/transition-colors/);
+  });
 }); 
