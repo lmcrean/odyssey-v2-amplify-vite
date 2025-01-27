@@ -2,15 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
+html, body, #root {
   margin: 0;
-  background: linear-gradient(180deg, rgb(117, 81, 194), rgb(255, 255, 255));
+  padding: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
+  flex-direction: column;
+}
+
+body {
+  background: linear-gradient(180deg, rgb(117, 81, 194), rgb(255, 255, 255));
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  height: 100vh;
-  width: 100vw;
-  justify-content: center;
-  align-items: center;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 main {
@@ -66,4 +76,49 @@ li:hover {
 a {
   font-weight: 800;
   text-decoration: none;
+}
+
+/* Auth Form Styles */
+.amplify-authenticator {
+  @apply w-full max-w-md mx-auto mt-8 p-4;
+}
+
+.amplify-tabs {
+  @apply bg-white rounded-lg shadow-md;
+}
+
+.amplify-tabs__list {
+  @apply flex border-b border-gray-200;
+}
+
+.amplify-tabs__item {
+  @apply px-4 py-2 text-gray-600 hover:text-gray-800 cursor-pointer;
+}
+
+.amplify-tabs__item--active {
+  @apply text-blue-600 border-b-2 border-blue-600;
+}
+
+.amplify-tabs__content {
+  @apply p-4;
+}
+
+.amplify-flex {
+  @apply flex flex-col gap-4;
+}
+
+.amplify-field {
+  @apply flex flex-col gap-1;
+}
+
+.amplify-field label {
+  @apply text-sm font-medium text-gray-700;
+}
+
+.amplify-field input {
+  @apply px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500;
+}
+
+.amplify-button {
+  @apply w-full px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500;
 }
