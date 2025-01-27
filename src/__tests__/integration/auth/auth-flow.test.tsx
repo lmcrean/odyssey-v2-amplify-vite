@@ -2,7 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'react-toastify';
 import { AuthComponent } from '../../../components/AuthComponent';
-import { mockSignOut, mockSignOutError } from '../../mocks/auth/amplify/authentication/signOut';
+import { mockSignOutError } from '../../mocks/auth/amplify/authentication/signOut';
 import { AuthProvider } from '../../mocks/auth/authenticator/context/AuthProvider';
 
 // Mock toast
