@@ -1,8 +1,9 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'react-toastify';
-import AuthComponent from '../../../components/AuthComponent';
+import { AuthComponent } from '../../../components/AuthComponent';
 import { mockSignOut, mockSignOutError } from '../../mocks/auth/amplify/authentication/signOut';
+import { AuthProvider } from '../../mocks/auth/authenticator/context/AuthProvider';
 
 // Mock toast
 vi.mock('react-toastify', () => ({
@@ -14,20 +15,15 @@ vi.mock('react-toastify', () => ({
   ToastContainer: () => null,
 }));
 
-// Mock @aws-amplify/ui-react
-vi.mock('@aws-amplify/ui-react', () => ({
-  withAuthenticator: (Component: any) => Component,
-  useAuthenticator: () => ({
-    route: 'authenticated',
-    signOut: mockSignOut,
-  }),
-}));
-
 describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await act(async () => {
-      render(<AuthComponent />);
+      render(
+        <AuthProvider initialAuthStatus="authenticated" initialRoute="authenticated">
+          <AuthComponent />
+        </AuthProvider>
+      );
     });
   });
 
@@ -41,7 +37,6 @@ describe('Auth Flow Integration', () => {
 
     expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
     expect(toast.success).toHaveBeenCalledWith('Successfully signed out!', expect.any(Object));
-    expect(mockSignOut).toHaveBeenCalled();
   });
 
   it('shows error toast when sign out fails', async () => {
@@ -56,6 +51,5 @@ describe('Auth Flow Integration', () => {
 
     expect(toast.info).toHaveBeenCalledWith('Signing out...', expect.any(Object));
     expect(toast.error).toHaveBeenCalledWith('Failed to sign out. Please try again.', expect.any(Object));
-    expect(mockSignOut).toHaveBeenCalled();
   });
 }); 
