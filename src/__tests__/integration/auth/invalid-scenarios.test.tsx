@@ -437,5 +437,34 @@ describe('Invalid Auth Scenarios', () => {
 
       expect(screen.getByLabelText(/new display name/i)).toHaveValue('');
     });
+
+    it('shows error when display name already exists', async () => {
+      // Mock updateUserAttributes to reject with a specific error for existing display name
+      vi.mocked(updateUserAttributes).mockRejectedValueOnce(
+        new Error('Display name already taken')
+      );
+
+      // Fill in the form with an existing display name
+      const displayNameInput = screen.getByLabelText(/new display name/i);
+      await act(async () => {
+        await fireEvent.change(displayNameInput, { target: { value: 'Existing User' } });
+      });
+
+      // Submit the form
+      const submitButton = screen.getByTestId('submit-change-display-name');
+      await act(async () => {
+        await fireEvent.click(submitButton);
+      });
+
+      // Verify the API call was made with the attempted display name
+      expect(updateUserAttributes).toHaveBeenCalledWith({
+        userAttributes: {
+          'custom:display_name': 'Existing User'
+        }
+      });
+
+      // Verify error message is shown
+      expect(toast.error).toHaveBeenCalledWith('This display name is already taken. Please choose another.', { autoClose: 3000 });
+    });
   });
 }); 
