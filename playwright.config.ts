@@ -21,10 +21,10 @@ export default defineConfig({
   workers: 1,
   reporter: [['html'], ['list']],
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173',
-    trace: 'retain-on-failure',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5175',
+    trace: 'on',
+    screenshot: 'on',
+    video: 'on',
     actionTimeout: 15000,
     navigationTimeout: 15000,
     viewport: { width: 1280, height: 720 },
@@ -49,7 +49,7 @@ export default defineConfig({
 
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
     command: 'npm run dev',
-    url: 'http://localhost:5173',
+    url: 'http://localhost:5175',
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
     stdout: 'pipe',
