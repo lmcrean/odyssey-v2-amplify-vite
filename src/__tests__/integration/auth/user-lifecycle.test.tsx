@@ -2,14 +2,19 @@ import { render, screen, fireEvent, act, cleanup } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthComponent } from '../../../components/AuthComponent';
 import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
-import { deleteUser, updatePassword } from 'aws-amplify/auth';
+import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { toast } from 'react-toastify';
 
 // Mock Amplify UI components
 vi.mock('@aws-amplify/ui-react', () => ({
   Authenticator: ({ children }: any) => children({
     signOut: mockAmplifySignOut,
-    user: { username: 'testuser' }
+    user: { 
+      username: 'testuser',
+      attributes: {
+        'custom:display_name': 'Test User'
+      }
+    }
   })
 }));
 
@@ -17,6 +22,7 @@ vi.mock('@aws-amplify/ui-react', () => ({
 vi.mock('aws-amplify/auth', () => ({
   deleteUser: vi.fn(),
   updatePassword: vi.fn(),
+  updateUserAttributes: vi.fn(),
   getCurrentUser: vi.fn().mockResolvedValue({ username: 'testuser' })
 }));
 
@@ -42,6 +48,117 @@ describe('User Lifecycle Integration', () => {
   });
 
   describe('Account Management', () => {
+    describe('Change Display Name', () => {
+      it('allows user to change their display name', async () => {
+        // Open change display name modal
+        const changeDisplayNameButton = screen.getByTestId('open-change-display-name-modal');
+        await act(async () => {
+          await fireEvent.click(changeDisplayNameButton);
+        });
+
+        // Fill in the form
+        const displayNameInput = screen.getByLabelText(/new display name/i);
+        await act(async () => {
+          await fireEvent.change(displayNameInput, { target: { value: 'New Display Name' } });
+        });
+
+        // Submit the form
+        const submitButton = screen.getByTestId('submit-change-display-name');
+        await act(async () => {
+          await fireEvent.click(submitButton);
+        });
+
+        expect(updateUserAttributes).toHaveBeenCalledWith({
+          userAttributes: {
+            'custom:display_name': 'New Display Name'
+          }
+        });
+        expect(toast.success).toHaveBeenCalledWith('Display name changed successfully');
+      });
+
+      it('shows error when display name is empty', async () => {
+        // Open change display name modal
+        const changeDisplayNameButton = screen.getByTestId('open-change-display-name-modal');
+        await act(async () => {
+          await fireEvent.click(changeDisplayNameButton);
+        });
+
+        // Fill in the form with empty value
+        const displayNameInput = screen.getByLabelText(/new display name/i);
+        await act(async () => {
+          await fireEvent.change(displayNameInput, { target: { value: '   ' } });
+        });
+
+        // Submit the form
+        const submitButton = screen.getByTestId('submit-change-display-name');
+        await act(async () => {
+          await fireEvent.click(submitButton);
+        });
+
+        expect(updateUserAttributes).not.toHaveBeenCalled();
+        expect(toast.error).toHaveBeenCalledWith('Display name cannot be empty');
+      });
+
+      it('shows error when display name change fails', async () => {
+        vi.mocked(updateUserAttributes).mockRejectedValueOnce(new Error('Failed to update display name'));
+
+        // Open change display name modal
+        const changeDisplayNameButton = screen.getByTestId('open-change-display-name-modal');
+        await act(async () => {
+          await fireEvent.click(changeDisplayNameButton);
+        });
+
+        // Fill in the form
+        const displayNameInput = screen.getByLabelText(/new display name/i);
+        await act(async () => {
+          await fireEvent.change(displayNameInput, { target: { value: 'New Display Name' } });
+        });
+
+        // Submit the form
+        const submitButton = screen.getByTestId('submit-change-display-name');
+        await act(async () => {
+          await fireEvent.click(submitButton);
+        });
+
+        expect(updateUserAttributes).toHaveBeenCalledWith({
+          userAttributes: {
+            'custom:display_name': 'New Display Name'
+          }
+        });
+        expect(toast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.');
+      });
+
+      it('closes modal and resets form on cancel', async () => {
+        // Open change display name modal
+        const changeDisplayNameButton = screen.getByTestId('open-change-display-name-modal');
+        await act(async () => {
+          await fireEvent.click(changeDisplayNameButton);
+        });
+
+        // Fill in the form
+        const displayNameInput = screen.getByLabelText(/new display name/i);
+        await act(async () => {
+          await fireEvent.change(displayNameInput, { target: { value: 'New Display Name' } });
+        });
+
+        // Click cancel
+        const cancelButton = screen.getByRole('button', { name: /cancel/i });
+        await act(async () => {
+          await fireEvent.click(cancelButton);
+        });
+
+        // Verify modal is closed
+        expect(screen.queryByLabelText(/new display name/i)).not.toBeInTheDocument();
+
+        // Reopen modal and verify form is reset
+        await act(async () => {
+          await fireEvent.click(changeDisplayNameButton);
+        });
+
+        expect(screen.getByLabelText(/new display name/i)).toHaveValue('');
+      });
+    });
+
     describe('Change Password', () => {
       it('allows user to change their password', async () => {
         // Open change password modal
