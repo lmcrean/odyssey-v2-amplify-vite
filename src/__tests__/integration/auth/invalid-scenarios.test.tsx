@@ -4,7 +4,22 @@ import { AuthComponent } from '../../../components/AuthComponent';
 import { withAuthenticator } from '../../mocks/auth/authenticator/components/withAuthenticator';
 import { mockSignUp } from '../../mocks/auth/amplify/registration/signUp';
 import { mockSignIn } from '../../mocks/auth/amplify/authentication/signIn';
+import { updatePassword } from 'aws-amplify/auth';
 import { toast } from 'react-toastify';
+
+// Mock Amplify UI components
+vi.mock('@aws-amplify/ui-react', () => ({
+  Authenticator: ({ children }: any) => children({
+    signOut: vi.fn(),
+    user: { 
+      username: 'testuser',
+      attributes: {
+        'custom:display_name': 'Test User'
+      }
+    }
+  }),
+  ToastContainer: () => null
+}));
 
 // Mock toast notifications
 vi.mock('react-toastify', () => ({
@@ -219,6 +234,125 @@ describe('Invalid Auth Scenarios', () => {
         password: 'Password123!'
       });
       expect(toast.error).toHaveBeenCalledWith('Failed to sign in. Please try again.', { autoClose: 3000 });
+    });
+  });
+
+  describe('Invalid Change Password', () => {
+    beforeEach(async () => {
+      render(
+        <TestComponent 
+          _authStatus="authenticated"
+          _route="authenticated"
+        />
+      );
+
+      // Click the Change Password button to open the modal
+      const changePasswordButton = screen.getByTestId('open-change-password-modal');
+      await act(async () => {
+        await fireEvent.click(changePasswordButton);
+      });
+    });
+
+    it('blocks password change and shows error for incorrect current password', async () => {
+      // Mock updatePassword to reject with an error
+      vi.mocked(updatePassword).mockRejectedValueOnce(new Error('Incorrect password'));
+
+      // Fill in the form with incorrect current password
+      const oldPasswordInput = screen.getByLabelText(/current password/i);
+      const newPasswordInput = screen.getByLabelText(/^new password$/i);
+      const confirmNewPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+      await act(async () => {
+        await fireEvent.change(oldPasswordInput, { target: { value: 'wrongpassword' } });
+        await fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } });
+        await fireEvent.change(confirmNewPasswordInput, { target: { value: 'NewPassword123!' } });
+      });
+
+      // Submit the form
+      const submitButton = screen.getByTestId('submit-change-password');
+      await act(async () => {
+        await fireEvent.click(submitButton);
+      });
+
+      expect(updatePassword).toHaveBeenCalledWith({
+        oldPassword: 'wrongpassword',
+        newPassword: 'NewPassword123!'
+      });
+      expect(toast.error).toHaveBeenCalledWith('Failed to change password. Please try again.', { autoClose: 3000 });
+    });
+
+    it('blocks password change and shows error when passwords do not match', async () => {
+      // Fill in the form with mismatched passwords
+      const oldPasswordInput = screen.getByLabelText(/current password/i);
+      const newPasswordInput = screen.getByLabelText(/^new password$/i);
+      const confirmNewPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+      await act(async () => {
+        await fireEvent.change(oldPasswordInput, { target: { value: 'currentpassword' } });
+        await fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } });
+        await fireEvent.change(confirmNewPasswordInput, { target: { value: 'DifferentPassword123!' } });
+      });
+
+      // Submit the form
+      const submitButton = screen.getByTestId('submit-change-password');
+      await act(async () => {
+        await fireEvent.click(submitButton);
+      });
+
+      expect(updatePassword).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith('New passwords do not match', { autoClose: 3000 });
+    });
+
+    it('blocks password change and shows error for weak new password', async () => {
+      // Mock updatePassword to reject with an error
+      vi.mocked(updatePassword).mockRejectedValueOnce(new Error('Password does not meet requirements'));
+
+      // Fill in the form with weak new password
+      const oldPasswordInput = screen.getByLabelText(/current password/i);
+      const newPasswordInput = screen.getByLabelText(/^new password$/i);
+      const confirmNewPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+      await act(async () => {
+        await fireEvent.change(oldPasswordInput, { target: { value: 'currentpassword' } });
+        await fireEvent.change(newPasswordInput, { target: { value: 'weak' } });
+        await fireEvent.change(confirmNewPasswordInput, { target: { value: 'weak' } });
+      });
+
+      // Submit the form
+      const submitButton = screen.getByTestId('submit-change-password');
+      await act(async () => {
+        await fireEvent.click(submitButton);
+      });
+
+      expect(updatePassword).toHaveBeenCalledWith({
+        oldPassword: 'currentpassword',
+        newPassword: 'weak'
+      });
+      expect(toast.error).toHaveBeenCalledWith('Failed to change password. Please try again.', { autoClose: 3000 });
+    });
+
+    it('closes modal and resets form when cancel is clicked', async () => {
+      // Fill in the form
+      const oldPasswordInput = screen.getByLabelText(/current password/i);
+      const newPasswordInput = screen.getByLabelText(/^new password$/i);
+      const confirmNewPasswordInput = screen.getByLabelText(/confirm new password/i);
+
+      await act(async () => {
+        await fireEvent.change(oldPasswordInput, { target: { value: 'currentpassword' } });
+        await fireEvent.change(newPasswordInput, { target: { value: 'NewPassword123!' } });
+        await fireEvent.change(confirmNewPasswordInput, { target: { value: 'NewPassword123!' } });
+      });
+
+      // Click cancel button
+      const cancelButton = screen.getByRole('button', { name: /cancel/i });
+      await act(async () => {
+        await fireEvent.click(cancelButton);
+      });
+
+      // Verify modal is closed and form is reset
+      expect(screen.queryByLabelText(/current password/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^new password$/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/confirm new password/i)).not.toBeInTheDocument();
     });
   });
 }); 
