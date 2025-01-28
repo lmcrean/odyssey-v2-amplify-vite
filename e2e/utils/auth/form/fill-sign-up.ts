@@ -7,7 +7,12 @@ export async function fillSignUpForm(page: Page, email: string, password: string
   // Wait for the sign-up form to be visible
   await page.waitForSelector('form[data-amplify-authenticator-signup]');
   
-  await page.fill('input[name="email"][type="email"]', email);
-  await page.fill('input[name="password"][type="password"]', password);
-  await page.fill('input[name="confirm_password"][type="password"]', confirmPassword);
+  // Fill email field
+  await page.locator('input[type="email"]').fill(email);
+  
+  // Fill password field - using the first password field
+  await page.locator('input[type="password"]').first().fill(password);
+  
+  // Fill confirm password field using placeholder
+  await page.locator('input[placeholder="Confirm Password"]').fill(confirmPassword);
 } 
