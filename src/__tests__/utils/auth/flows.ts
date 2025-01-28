@@ -77,13 +77,13 @@ export const authFlowSteps = {
   },
 
   deleteAccount: async () => {
-    // Open delete modal
-    const deleteButton = screen.getByRole('button', { name: /delete account/i });
+    // Open delete modal using data-testid
+    const deleteButton = screen.getByTestId('open-delete-account-modal');
     await act(async () => {
       await fireEvent.click(deleteButton);
     });
 
-    // Confirm deletion
+    // Confirm deletion using data-testid
     const confirmButton = screen.getByTestId('confirm-delete-account');
     await act(async () => {
       await fireEvent.click(confirmButton);
