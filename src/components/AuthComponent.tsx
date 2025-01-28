@@ -37,7 +37,10 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
       setNewDisplayName('');
     } catch (error) {
       console.error('Failed to change display name:', error);
-      toast.error('Failed to change display name. Please try again.', { autoClose: 3000 });
+      const errorMessage = error instanceof Error && error.message === 'Display name already taken'
+        ? 'This display name is already taken. Please choose another.'
+        : 'Failed to change display name. Please try again.';
+      toast.error(errorMessage, { autoClose: 3000 });
     }
   };
 
