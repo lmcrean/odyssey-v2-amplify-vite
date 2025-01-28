@@ -4,8 +4,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useState } from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
+import { AuthStatus } from '../__tests__/mocks/auth/types/auth.types';
 
-export const AuthComponent = () => {
+interface AuthComponentProps {
+  authStatus?: AuthStatus;
+}
+
+export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unauthenticated' }) => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
   const [showChangeDisplayNameModal, setShowChangeDisplayNameModal] = useState(false);
@@ -16,36 +21,36 @@ export const AuthComponent = () => {
 
   const handleChangeDisplayName = async () => {
     if (!newDisplayName.trim()) {
-      toast.error('Display name cannot be empty');
+      toast.error('Display name cannot be empty', { autoClose: 3000 });
       return;
     }
 
     try {
-      toast.info('Changing display name...');
+      toast.info('Changing display name...', { autoClose: 3000 });
       await updateUserAttributes({
         userAttributes: {
           'custom:display_name': newDisplayName.trim()
         }
       });
-      toast.success('Display name changed successfully');
+      toast.success('Display name changed successfully', { autoClose: 3000 });
       setShowChangeDisplayNameModal(false);
       setNewDisplayName('');
     } catch (error) {
       console.error('Failed to change display name:', error);
-      toast.error('Failed to change display name. Please try again.');
+      toast.error('Failed to change display name. Please try again.', { autoClose: 3000 });
     }
   };
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
-      toast.error('New passwords do not match');
+      toast.error('New passwords do not match', { autoClose: 3000 });
       return;
     }
 
     try {
-      toast.info('Changing password...');
+      toast.info('Changing password...', { autoClose: 3000 });
       await updatePassword({ oldPassword, newPassword });
-      toast.success('Password changed successfully');
+      toast.success('Password changed successfully', { autoClose: 3000 });
       setShowChangePasswordModal(false);
       // Reset form
       setOldPassword('');
@@ -53,9 +58,14 @@ export const AuthComponent = () => {
       setConfirmNewPassword('');
     } catch (error) {
       console.error('Failed to change password:', error);
-      toast.error('Failed to change password. Please try again.');
+      toast.error('Failed to change password. Please try again.', { autoClose: 3000 });
     }
   };
+
+  // If not authenticated, render nothing
+  if (authStatus !== 'authenticated') {
+    return null;
+  }
 
   return (
     <Authenticator>
@@ -247,14 +257,14 @@ export const AuthComponent = () => {
                         signOut?.();
                       } catch (error) {
                         console.error('Failed to delete account:', error);
-                        toast.error('Failed to delete account. Please try again.');
+                        toast.error('Failed to delete account. Please try again.', { autoClose: 3000 });
                       }
                     }}
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                     role="button"
-                    aria-label="Confirm"
+                    aria-label="Delete Account"
                   >
-                    Confirm
+                    Delete Account
                   </button>
                 </div>
               </div>
