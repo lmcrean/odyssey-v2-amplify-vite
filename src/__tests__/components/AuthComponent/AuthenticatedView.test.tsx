@@ -16,7 +16,11 @@ vi.mock('react-toastify', () => ({
 vi.mock('@aws-amplify/ui-react', () => ({
   Authenticator: ({ children }: { children: Function }) => children({
     signOut: vi.fn(),
-    user: { username: 'authenticated user' }
+    user: { 
+      signInDetails: { 
+        loginId: 'authenticated user' 
+      }
+    }
   }),
 }));
 
