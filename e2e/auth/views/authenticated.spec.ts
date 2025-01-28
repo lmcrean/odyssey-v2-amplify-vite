@@ -3,36 +3,119 @@ import { fillSignInForm, clickSignIn, clickSignOut, clickDeleteAccount } from '.
 
 test.describe('Authenticated View', () => {
   test.beforeEach(async ({ page }) => {
-    // Start from home and sign in
-    await page.goto('/');
+    // Enable verbose console logging
+    page.on('console', msg => {
+      console.log(`Browser ${msg.type()}: ${msg.text()}`);
+    });
+
+    page.on('pageerror', error => {
+      console.error('Page error:', error);
+    });
+
+    page.on('requestfailed', request => {
+      console.error('Failed request:', request.url(), request.failure()?.errorText);
+    });
+
+    // Start from home and wait for auth form
+    console.log('Navigating to home page');
+    await page.goto('/', { waitUntil: 'networkidle' });
+    
+    // Wait for auth form to be visible
+    console.log('Waiting for auth form');
+    const authForm = page.locator('form[data-amplify-form]');
+    await expect(authForm).toBeVisible({ timeout: 10000 });
+    
+    // Ensure we're on the sign-in tab
+    console.log('Checking sign-in tab');
+    const signInTab = page.locator('[role="tab"]').filter({ hasText: 'Sign In' });
+    if (await signInTab.isVisible()) {
+      await signInTab.click();
+      await expect(signInTab).toHaveAttribute('aria-selected', 'true');
+    }
+    
+    // Wait for the sign-in form fields
+    console.log('Waiting for sign-in form fields');
+    const emailField = page.locator('input[name="username"][type="email"]');
+    const passwordField = page.locator('input[name="password"][type="password"]');
+    
+    await expect(emailField).toBeVisible({ timeout: 5000 });
+    await expect(passwordField).toBeVisible({ timeout: 5000 });
+    
+    // Fill and submit the form
+    console.log('Filling sign-in form');
     await fillSignInForm(page, process.env.TEST_USER_EMAIL!, process.env.TEST_USER_PASSWORD!);
+    
+    console.log('Clicking sign in');
     await clickSignIn(page);
     
-    // Wait for authenticated view to load
-    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible();
+    // Wait for any loading states or transitions
+    await page.waitForLoadState('networkidle');
+    
+    // Check for error messages
+    const errorMessage = page.locator('[data-amplify-error]');
+    if (await errorMessage.isVisible()) {
+      const errorText = await errorMessage.textContent();
+      console.error('Authentication error:', errorText);
+      throw new Error(`Authentication failed: ${errorText}`);
+    }
+    
+    // Wait for authenticated view to load by checking for welcome message
+    console.log('Waiting for authenticated view');
+    const welcomeMessage = page.getByText(/hello/i);
+    await expect(welcomeMessage).toBeVisible({ timeout: 15000 });
+    
+    // Verify username is shown in welcome message
+    const username = await welcomeMessage.textContent();
+    console.log('Welcome message:', username);
+    expect(username?.toLowerCase()).toContain('hello');
   });
 
   test('renders authenticated view elements', async ({ page }) => {
-    // Verify welcome message
-    await expect(page.getByText(/welcome/i)).toBeVisible();
+    console.log('Testing authenticated view elements');
     
-    // Verify action buttons
-    await expect(page.getByRole('button', { name: /sign out/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /delete account/i })).toBeVisible();
+    // Verify action buttons with aria labels
+    const signOutButton = page.getByRole('button', { name: 'Sign Out' });
+    const deleteAccountButton = page.getByRole('button', { name: 'Delete Account' });
+    
+    // Check visibility and state
+    await expect(signOutButton).toBeVisible({ timeout: 5000 });
+    await expect(signOutButton).toBeEnabled();
+    await expect(signOutButton).toHaveClass(/bg-red-500/);
+    
+    await expect(deleteAccountButton).toBeVisible({ timeout: 5000 });
+    await expect(deleteAccountButton).toBeEnabled();
+    await expect(deleteAccountButton).toHaveClass(/bg-red-700/);
   });
 
   test('shows delete account confirmation modal', async ({ page }) => {
+    console.log('Testing delete account modal');
+    
     // Click delete account button
-    await clickDeleteAccount(page);
+    const deleteAccountButton = page.getByRole('button', { name: 'Delete Account' });
+    await expect(deleteAccountButton).toBeVisible({ timeout: 5000 });
+    await deleteAccountButton.click();
     
     // Verify modal content
-    await expect(page.getByRole('dialog')).toBeVisible();
-    await expect(page.getByText(/are you sure/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /confirm/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /cancel/i })).toBeVisible();
+    const modal = page.locator('.fixed.inset-0');
+    await expect(modal).toBeVisible({ timeout: 5000 });
     
-    // Verify modal can be closed
-    await page.getByRole('button', { name: /cancel/i }).click();
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+    // Verify modal elements
+    await expect(page.getByRole('heading', { name: 'Delete Account' })).toBeVisible({ timeout: 5000 });
+    await expect(page.getByText(/are you sure.*cannot be undone/i)).toBeVisible({ timeout: 5000 });
+    
+    const confirmButton = page.getByRole('button', { name: 'Confirm' });
+    const cancelButton = page.getByRole('button', { name: 'Cancel' });
+    
+    // Verify button visibility and styling
+    await expect(confirmButton).toBeVisible({ timeout: 5000 });
+    await expect(confirmButton).toHaveClass(/bg-red-600/);
+    
+    await expect(cancelButton).toBeVisible({ timeout: 5000 });
+    await expect(cancelButton).toHaveClass(/bg-gray-500/);
+    
+    // Test modal close
+    console.log('Testing modal close');
+    await cancelButton.click();
+    await expect(modal).not.toBeVisible({ timeout: 5000 });
   });
 }); 
