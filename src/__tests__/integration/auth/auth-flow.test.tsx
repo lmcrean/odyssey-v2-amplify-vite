@@ -25,7 +25,7 @@ describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await act(async () => {
-      render(<AuthComponent />);
+      render(<AuthComponent authStatus="authenticated" />);
     });
   });
 
