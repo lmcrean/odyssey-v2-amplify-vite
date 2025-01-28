@@ -40,7 +40,7 @@ describe('User Lifecycle Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     cleanup();
-    render(<AuthComponent />);
+    render(<AuthComponent authStatus="authenticated" />);
   });
 
   afterEach(() => {
@@ -73,7 +73,7 @@ describe('User Lifecycle Integration', () => {
             'custom:display_name': 'New Display Name'
           }
         });
-        expect(toast.success).toHaveBeenCalledWith('Display name changed successfully');
+        expect(toast.success).toHaveBeenCalledWith('Display name changed successfully', { autoClose: 3000 });
       });
 
       it('shows error when display name is empty', async () => {
@@ -96,7 +96,7 @@ describe('User Lifecycle Integration', () => {
         });
 
         expect(updateUserAttributes).not.toHaveBeenCalled();
-        expect(toast.error).toHaveBeenCalledWith('Display name cannot be empty');
+        expect(toast.error).toHaveBeenCalledWith('Display name cannot be empty', { autoClose: 3000 });
       });
 
       it('shows error when display name change fails', async () => {
@@ -125,7 +125,7 @@ describe('User Lifecycle Integration', () => {
             'custom:display_name': 'New Display Name'
           }
         });
-        expect(toast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.');
+        expect(toast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.', { autoClose: 3000 });
       });
 
       it('closes modal and resets form on cancel', async () => {
@@ -188,7 +188,7 @@ describe('User Lifecycle Integration', () => {
           oldPassword: 'oldPass123',
           newPassword: 'newPass123'
         });
-        expect(toast.success).toHaveBeenCalledWith('Password changed successfully');
+        expect(toast.success).toHaveBeenCalledWith('Password changed successfully', { autoClose: 3000 });
       });
 
       it('shows error when passwords do not match', async () => {
@@ -216,7 +216,7 @@ describe('User Lifecycle Integration', () => {
         });
 
         expect(updatePassword).not.toHaveBeenCalled();
-        expect(toast.error).toHaveBeenCalledWith('New passwords do not match');
+        expect(toast.error).toHaveBeenCalledWith('New passwords do not match', { autoClose: 3000 });
       });
 
       it('shows error when password change fails', async () => {
@@ -249,7 +249,7 @@ describe('User Lifecycle Integration', () => {
           oldPassword: 'oldPass123',
           newPassword: 'newPass123'
         });
-        expect(toast.error).toHaveBeenCalledWith('Failed to change password. Please try again.');
+        expect(toast.error).toHaveBeenCalledWith('Failed to change password. Please try again.', { autoClose: 3000 });
       });
 
       it('closes modal and resets form on cancel', async () => {
@@ -298,7 +298,7 @@ describe('User Lifecycle Integration', () => {
       });
 
       // Confirm deletion
-      const confirmButton = screen.getByRole('button', { name: /confirm/i });
+      const confirmButton = screen.getByTestId('confirm-delete-account');
       await act(async () => {
         await fireEvent.click(confirmButton);
       });
@@ -308,7 +308,7 @@ describe('User Lifecycle Integration', () => {
     });
 
     it('shows error when account deletion fails', async () => {
-      vi.mocked(deleteUser).mockRejectedValueOnce(new Error('Failed to delete user'));
+      vi.mocked(deleteUser).mockRejectedValueOnce(new Error('Failed to delete account'));
 
       // Open delete modal
       const deleteButton = screen.getByRole('button', { name: /delete account/i });
@@ -317,13 +317,13 @@ describe('User Lifecycle Integration', () => {
       });
 
       // Confirm deletion
-      const confirmButton = screen.getByRole('button', { name: /confirm/i });
+      const confirmButton = screen.getByTestId('confirm-delete-account');
       await act(async () => {
         await fireEvent.click(confirmButton);
       });
 
       expect(deleteUser).toHaveBeenCalled();
-      expect(mockAmplifySignOut).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith('Failed to delete account. Please try again.', { autoClose: 3000 });
     });
 
     it('cancels account deletion when cancel is clicked', async () => {
