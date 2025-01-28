@@ -6,9 +6,9 @@ export const fillSignInForm = async (page: Page, email: string, password: string
 };
 
 export const fillSignUpForm = async (page: Page, email: string, password: string, confirmPassword: string) => {
-  await page.locator('input[type="email"]').fill(email);
-  await page.locator('input[type="password"]').fill(password);
-  await page.locator('input[placeholder="Confirm Password"]').fill(confirmPassword);
+  await page.locator('input[name="email"][type="email"]').fill(email);
+  await page.locator('input[name="password"][type="password"]').fill(password);
+  await page.locator('input[name="confirm_password"][type="password"]').fill(confirmPassword);
 };
 
 export const submitForm = async (page: Page) => {
