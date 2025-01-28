@@ -8,11 +8,6 @@ import config from '../amplify_outputs.json';
 // Configure Amplify with the outputs from the backend
 Amplify.configure(config);
 
-
-
-import outputs from "../amplify_outputs.json";
-Amplify.configure(outputs);
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <App />
