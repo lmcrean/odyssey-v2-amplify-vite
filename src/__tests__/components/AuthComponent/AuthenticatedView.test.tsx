@@ -29,7 +29,7 @@ vi.mock('aws-amplify/auth', () => ({
 describe('Authenticated View', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    render(<AuthComponent />);
+    render(<AuthComponent authStatus="authenticated" />);
   });
 
   describe('Welcome Message', () => {
@@ -71,7 +71,7 @@ describe('Authenticated View', () => {
       await act(async () => {
         fireEvent.click(deleteButton);
       });
-      const confirmButton = screen.getByRole('button', { name: /confirm/i });
+      const confirmButton = screen.getByTestId('confirm-delete-account');
       await act(async () => {
         fireEvent.click(confirmButton);
       });
