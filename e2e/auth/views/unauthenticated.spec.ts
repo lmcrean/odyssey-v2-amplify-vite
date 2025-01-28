@@ -2,9 +2,27 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Unauthenticated View', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5173');
-    // Wait for any content to load
-    await page.waitForLoadState('networkidle');
+    // Use baseURL from config
+    await page.goto('/');
+    
+    // Wait for server to be ready with retry logic
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+      try {
+        await page.waitForLoadState('networkidle', { timeout: 10000 });
+        break;
+      } catch (error) {
+        retries++;
+        if (retries === maxRetries) {
+          throw error;
+        }
+        // Wait 2 seconds before retrying
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
+    }
+    
     // Log the page content for debugging
     console.log('Page Content:', await page.content());
   });
