@@ -266,6 +266,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
                     className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded"
                     role="button"
                     aria-label="Delete Account"
+                    data-testid="confirm-delete-account"
                   >
                     Delete Account
                   </button>
