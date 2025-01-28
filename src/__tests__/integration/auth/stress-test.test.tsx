@@ -48,7 +48,7 @@ describe('Auth Stress Tests', () => {
     cleanup();
   });
 
-  describe('Complex User Flows', () => {
+  describe('Basic User Flows', () => {
     it('handles signup -> login -> change username -> change password -> logout -> login -> delete account', async () => {
       const flow = {
         name: 'Full user lifecycle flow',
@@ -90,8 +90,10 @@ describe('Auth Stress Tests', () => {
       expect(updatePassword).toHaveBeenCalledTimes(2);
       expect(mockAmplifySignOut).toHaveBeenCalled();
     });
+  });
 
-    it('handles failed operations gracefully', async () => {
+  describe('Error Handling Flows', () => {
+    it('handles basic error flow with recovery', async () => {
       // Mock failures
       vi.mocked(updateUserAttributes).mockRejectedValueOnce(new Error('Failed to update display name'));
       vi.mocked(updatePassword).mockRejectedValueOnce(new Error('Failed to update password'));
@@ -115,6 +117,99 @@ describe('Auth Stress Tests', () => {
       expect(updateUserAttributes).toHaveBeenCalledTimes(2);
       expect(updatePassword).toHaveBeenCalledTimes(2);
       expect(mockAmplifySignOut).toHaveBeenCalled();
+    });
+
+    it('handles alternating success/failure pattern', async () => {
+      // Mock alternating failures
+      vi.mocked(updateUserAttributes)
+        .mockResolvedValueOnce({}) // First call succeeds
+        .mockRejectedValueOnce(new Error('Failed to update display name')) // Second call fails
+        .mockResolvedValueOnce({}); // Third call succeeds
+
+      vi.mocked(updatePassword)
+        .mockRejectedValueOnce(new Error('Failed to update password')) // First call fails
+        .mockResolvedValueOnce({}) // Second call succeeds
+        .mockRejectedValueOnce(new Error('Failed to update password')); // Third call fails
+
+      const flow = {
+        name: 'Alternating success/failure flow',
+        steps: [
+          authFlowSteps.changeUsername, // Success
+          authFlowSteps.changePassword, // Fail
+          authFlowSteps.changeUsername, // Fail
+          authFlowSteps.changePassword, // Success
+          authFlowSteps.changeUsername, // Success
+          authFlowSteps.changePassword  // Fail
+        ]
+      };
+
+      await performAuthFlow(flow);
+
+      expect(toast.success).toHaveBeenCalledTimes(3); // 3 successful operations
+      expect(toast.error).toHaveBeenCalledTimes(3); // 3 failed operations
+      expect(updateUserAttributes).toHaveBeenCalledTimes(3);
+      expect(updatePassword).toHaveBeenCalledTimes(3);
+    });
+
+    it('handles cascading failures with delete account', async () => {
+      // Mock cascading failures
+      vi.mocked(updateUserAttributes).mockRejectedValue(new Error('Failed to update display name'));
+      vi.mocked(updatePassword).mockRejectedValue(new Error('Failed to update password'));
+      vi.mocked(deleteUser).mockRejectedValueOnce(new Error('Failed to delete account'));
+
+      const flow = {
+        name: 'Cascading failures flow',
+        steps: [
+          authFlowSteps.changeUsername, // Fail
+          authFlowSteps.changePassword, // Fail
+          authFlowSteps.deleteAccount,  // Fail first time
+          authFlowSteps.deleteAccount   // Should succeed second time
+        ]
+      };
+
+      await performAuthFlow(flow);
+
+      expect(toast.error).toHaveBeenCalledTimes(3); // 3 failed operations
+      expect(updateUserAttributes).toHaveBeenCalledTimes(1);
+      expect(updatePassword).toHaveBeenCalledTimes(1);
+      expect(deleteUser).toHaveBeenCalledTimes(2);
+    });
+
+    it('handles mixed operation flow with partial failures', async () => {
+      // Mock specific failures
+      vi.mocked(updateUserAttributes)
+        .mockResolvedValueOnce({ sub: 'test', email: 'test@test.com' }) // First username change succeeds
+        .mockRejectedValueOnce(new Error('Failed to update display name')); // Second username change fails
+
+      vi.mocked(updatePassword)
+        .mockRejectedValueOnce(new Error('Failed to update password')) // First password change fails
+        .mockResolvedValue(undefined); // Second password change succeeds
+
+      vi.mocked(deleteUser).mockResolvedValue(undefined);
+      
+      const flow = {
+        name: 'Mixed operations with partial failures',
+        steps: [
+          authFlowSteps.login,
+          authFlowSteps.changeUsername, // Success
+          authFlowSteps.changePassword, // Fail
+          authFlowSteps.logout,
+          authFlowSteps.login,
+          authFlowSteps.changeUsername, // Fail
+          authFlowSteps.changePassword, // Success
+          authFlowSteps.deleteAccount   // Success
+        ]
+      };
+
+      await performAuthFlow(flow);
+
+      // Successful operations: first username change, second password change, delete account
+      expect(toast.success).toHaveBeenCalledTimes(3);
+      expect(toast.error).toHaveBeenCalledTimes(2); // Failed username change and password change
+      expect(updateUserAttributes).toHaveBeenCalledTimes(2);
+      expect(updatePassword).toHaveBeenCalledTimes(2);
+      expect(deleteUser).toHaveBeenCalledTimes(1);
+      expect(mockAmplifySignOut).toHaveBeenCalledTimes(2); // Called after logout and delete account
     });
   });
 });
