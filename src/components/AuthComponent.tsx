@@ -76,7 +76,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
         <div className="p-4">
           <ToastContainer position="top-right" />
           <h1 className="text-2xl font-bold mb-4">
-            Hello, {user?.attributes?.['custom:display_name'] || user?.username}!
+            Hello, {user?.signInDetails?.loginId || 'User'}!
           </h1>
           
           <div className="space-y-4">
@@ -114,6 +114,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
               className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded w-full"
               role="button"
               aria-label="Delete Account"
+              data-testid="open-delete-account-modal"
             >
               Delete Account
             </button>
@@ -256,6 +257,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
                     onClick={async () => {
                       try {
                         await deleteUser();
+                        toast.success('Account deleted successfully', { autoClose: 3000 });
                         setShowDeleteModal(false);
                         signOut?.();
                       } catch (error) {
