@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { signIn, signOut, deleteUser, getCurrentUser } from 'aws-amplify/auth';
+import { signIn, signOut, deleteUser } from 'aws-amplify/auth';
 import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
-import './unit/setup';
+import '../unit/setup';
 
 // Test user credentials for authenticated view tests
 export const AUTH_VIEW_TEST_USER = {
@@ -90,6 +90,7 @@ describe('Backend Auth - Authenticated View Test User', () => {
       UserPoolId: USER_POOL_ID,
       Username: AUTH_VIEW_TEST_USER.email,
     }));
-    expect(userInfo.Username).toBe(AUTH_VIEW_TEST_USER.email);
+    const emailAttribute = userInfo.UserAttributes?.find(attr => attr.Name === 'email');
+    expect(emailAttribute?.Value).toBe(AUTH_VIEW_TEST_USER.email);
   });
 }); 
