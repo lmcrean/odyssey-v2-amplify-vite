@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { fillSignInForm, clickSignIn, clickSignOut, clickDeleteAccount } from '../../utils/auth/form';
+import { fillSignInForm } from '../../utils/auth/form';
+import { AUTH_VIEW_TEST_USER } from '../../../src/__tests__/backend/auth/fixtures/authenticated-view-user.test';
 
 test.describe('Authenticated View', () => {
   test.beforeEach(async ({ page }) => {
@@ -43,10 +44,12 @@ test.describe('Authenticated View', () => {
     
     // Fill and submit the form
     console.log('Filling sign-in form');
-    await fillSignInForm(page, process.env.TEST_USER_EMAIL!, process.env.TEST_USER_PASSWORD!);
+    await fillSignInForm(page, AUTH_VIEW_TEST_USER.email, AUTH_VIEW_TEST_USER.password);
     
+    // Click sign in button
     console.log('Clicking sign in');
-    await clickSignIn(page);
+    const signInButton = page.getByRole('button', { name: 'Sign In' });
+    await signInButton.click();
     
     // Wait for any loading states or transitions
     await page.waitForLoadState('networkidle');
