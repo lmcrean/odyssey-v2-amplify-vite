@@ -5,9 +5,13 @@ import { Page } from '@playwright/test';
  * Waits for fields to be visible and enabled before filling
  */
 export async function fillSignInForm(page: Page, email: string, password: string) {
+  // Wait for the form to be ready
+  await page.waitForSelector('[data-testid="authenticator-form"]', { timeout: 10000 });
+  await page.waitForLoadState('networkidle');
+  
   // Get form fields
-  const emailField = page.locator('input[name="username"][type="email"]');
-  const passwordField = page.locator('input[name="password"][type="password"]');
+  const emailField = page.getByLabel('Email');
+  const passwordField = page.locator('input[name="password"]').first();
   
   // Wait for fields to be ready
   await emailField.waitFor({ state: 'visible', timeout: 5000 });
@@ -16,19 +20,14 @@ export async function fillSignInForm(page: Page, email: string, password: string
   await passwordField.waitFor({ state: 'visible', timeout: 5000 });
   await passwordField.waitFor({ state: 'enabled', timeout: 5000 });
   
-  // Clear fields first
-  await emailField.clear();
-  await passwordField.clear();
-  
   // Fill in the fields
   await emailField.fill(email);
   await passwordField.fill(password);
   
-  // Verify fields were filled correctly
-  const filledEmail = await emailField.inputValue();
-  const filledPassword = await passwordField.inputValue();
+  // Click the Sign in button
+  const signInButton = page.getByRole('button', { name: 'Sign in' });
+  await signInButton.click();
   
-  if (filledEmail !== email || filledPassword !== password) {
-    throw new Error('Form fields were not filled correctly');
-  }
+  // Wait for success message
+  await page.getByText('Successfully signed in!', { exact: true }).waitFor({ timeout: 10000 });
 } 
