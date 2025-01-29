@@ -5,7 +5,7 @@ import './setup';
 
 // Test user credentials
 const TEST_USER = {
-  email: `test-${Date.now()}@example.com`,
+  email: `test-${Date.now()}-${Math.random().toString(36).substring(2)}@example.com`,
   password: 'Test123!@#',
   name: 'Test User',
   updatedName: 'Updated Test User'
