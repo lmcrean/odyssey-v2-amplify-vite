@@ -1,20 +1,41 @@
 import { test as base, expect } from '@playwright/test';
-import { Amplify } from 'aws-amplify';
-import { fileURLToPath } from 'url';
-import { dirname, resolve } from 'path';
-import fs from 'fs';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const configPath = resolve(__dirname, '../../amplify_outputs.json');
-const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+// Mock Amplify Auth
+const mockAuth = {
+  currentAuthenticatedUser: async () => ({
+    username: 'test-user',
+    attributes: {
+      email: process.env.TEST_USER_EMAIL || 'test@example.com',
+      sub: '123',
+    },
+  }),
+  signOut: async () => {},
+  deleteUser: async () => {},
+};
 
-// Configure Amplify for tests
-Amplify.configure(config);
+// Mock window.Auth
+const mockWindow = async (page) => {
+  await page.addInitScript(`
+    window.Auth = {
+      currentAuthenticatedUser: async () => ({
+        username: 'test-user',
+        attributes: {
+          email: '${process.env.TEST_USER_EMAIL || 'test@example.com'}',
+          sub: '123',
+        },
+      }),
+      signOut: async () => {},
+      deleteUser: async () => {},
+    };
+  `);
+};
 
-// Create a test fixture that includes Amplify configuration
+// Create a test fixture that includes Auth mock setup
 export const test = base.extend({
-  // Add any custom test fixtures here if needed
+  page: async ({ page }, use) => {
+    await mockWindow(page);
+    await use(page);
+  },
 });
 
 export { expect }; 
