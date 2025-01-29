@@ -29,6 +29,14 @@ export default defineConfig({
     navigationTimeout: 15000,
     viewport: { width: 1280, height: 720 },
     testIdAttribute: 'data-testid',
+    // Allow JavaScript access
+    bypassCSP: true,
+    // Enable localStorage access
+    contextOptions: {
+      storageState: undefined,
+    },
+    // Make storage state optional
+    storageState: process.env.CI ? undefined : './e2e/.auth/storage-state.json'
   },
 
   projects: [
@@ -43,7 +51,11 @@ export default defineConfig({
     // // },
     {
       name: 'safari',
-      use: { ...devices['Desktop Safari'] },
+      use: {
+        ...devices['Desktop Safari'],
+        // Allow JavaScript access in Safari
+        javaScriptEnabled: true,
+      },
     },
   ],
 
@@ -54,5 +66,18 @@ export default defineConfig({
     timeout: 120000,
     stdout: 'pipe',
     stderr: 'pipe',
+    // Add Vite-specific optimizations
+    env: {
+      // Disable HMR for tests to reduce overhead
+      VITE_DISABLE_HMR: 'true',
+      // Use production mode for tests to improve performance
+      NODE_ENV: process.env.CI ? 'production' : 'development'
+    }
+  },
+  // Add global test timeout
+  timeout: 30000,
+  // Increase expect timeout for Vite's initial compilation
+  expect: {
+    timeout: 10000
   },
 }); 
