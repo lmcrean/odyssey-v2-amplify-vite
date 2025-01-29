@@ -6,6 +6,27 @@ import { defineAuth } from '@aws-amplify/backend';
  */
 export const auth = defineAuth({
   loginWith: {
-    email: true,
+    email: {
+      verificationEmailSubject: 'Welcome to Odyssey! Verify your email',
+      verificationEmailBody: 'Thanks for signing up! Your verification code is {####}',
+    },
+  },
+  userAttributes: {
+    profilePicture: {
+      mutable: true,
+      required: false,
+    },
+    displayName: {
+      mutable: true,
+      required: false,
+    },
+  },
+  multifactor: false,
+  passwordPolicy: {
+    minLength: 8,
+    requireNumbers: true,
+    requireSpecialCharacters: true,
+    requireUppercase: true,
+    requireLowercase: true,
   },
 });
