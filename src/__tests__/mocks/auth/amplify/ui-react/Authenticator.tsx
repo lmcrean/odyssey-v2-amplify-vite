@@ -4,6 +4,9 @@ import { vi } from 'vitest';
 export const mockSignOut = vi.fn();
 export const mockUser = {
   username: 'authenticated user',
+  signInDetails: {
+    loginId: 'authenticated user'
+  }
   // Add other user properties as needed
 };
 
