@@ -22,9 +22,6 @@ test.describe('Unauthenticated View', () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    
-    // Log the page content for debugging
-    console.log('Page Content:', await page.content());
   });
 
   test('renders sign-in form elements', async ({ page }) => {
