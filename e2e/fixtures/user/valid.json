@@ -1,5 +1,5 @@
 {
-  "email": "test-user@example.com",
-  "password": "Test123!@#",
-  "confirmPassword": "Test123!@#"
+  "email": "test-auth-view@example.com",
+  "password": "AuthView123!@#",
+  "name": "Auth View Test User"
 } 
