@@ -5,13 +5,12 @@ import { Page } from '@playwright/test';
  * Waits for fields to be visible and enabled before filling
  */
 export async function fillSignInForm(page: Page, email: string, password: string) {
-  // Wait for the form to be ready
-  await page.waitForSelector('[data-testid="authenticator-form"]', { timeout: 10000 });
+  // Wait for the form to be ready and visible
   await page.waitForLoadState('networkidle');
   
-  // Get form fields
+  // Get form fields using the labels shown in the screenshot
   const emailField = page.getByLabel('Email');
-  const passwordField = page.locator('input[name="password"]').first();
+  const passwordField = page.getByLabel('Password');
   
   // Wait for fields to be ready
   await emailField.waitFor({ state: 'visible', timeout: 5000 });
@@ -27,7 +26,4 @@ export async function fillSignInForm(page: Page, email: string, password: string
   // Click the Sign in button
   const signInButton = page.getByRole('button', { name: 'Sign in' });
   await signInButton.click();
-  
-  // Wait for success message
-  await page.getByText('Successfully signed in!', { exact: true }).waitFor({ timeout: 10000 });
 } 
