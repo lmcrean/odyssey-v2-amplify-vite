@@ -45,3 +45,6 @@ test-results/
 *.png
 last-run.json
 e2e/.auth/
+
+
+.env.test
