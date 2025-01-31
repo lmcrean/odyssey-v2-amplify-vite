@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { AUTH_VIEW_TEST_USER } from '../../../../src/__tests__/backend/auth/fixtures/authenticated-view-user.test';
-import { fillSignUpForm, clickCreateAccount } from '../../../utils/auth/form';
-import { expectSuccessToast } from '../../../utils/toast';
+import { AUTH_VIEW_TEST_USER } from '../../../../../src/__tests__/backend/auth/fixtures/authenticated-view-user.test';
+import { fillSignUpForm, clickCreateAccount } from '../../../../utils/auth/form';
+import { expectSuccessToast } from '../../../../utils/toast';
 
 test.describe('Valid Sign Up Flow', () => {
   test.beforeEach(async ({ page }) => {

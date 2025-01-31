@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test';
 import { Amplify } from 'aws-amplify';
 import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { fromEnv } from '@aws-sdk/credential-providers';
-import { fillSignInForm, clickSignIn } from '../../../utils/auth/form';
-import { expectSuccessToast, expectInfoToast } from '../../../utils/toast';
+import { fillSignInForm, clickSignIn } from '../../../../utils/auth/form';
+import { expectSuccessToast, expectInfoToast } from '../../../../utils/toast';
 import dotenv from 'dotenv';
 import path from 'path';
 
