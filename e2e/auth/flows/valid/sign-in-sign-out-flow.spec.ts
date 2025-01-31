@@ -7,8 +7,8 @@ import { expectSuccessToast, expectInfoToast } from '../../../utils/toast';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables from .env.test
-dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
+// Load environment variables from .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 // Debug environment variables (without sensitive data)
 console.log('Environment Variables:', {
