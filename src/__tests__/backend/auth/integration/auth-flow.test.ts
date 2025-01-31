@@ -1,29 +1,47 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterEach } from 'vitest';
 import { signIn, signOut, updatePassword, deleteUser, getCurrentUser, fetchUserAttributes, updateUserAttributes } from 'aws-amplify/auth';
-import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand, AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import '../unit/setup';
-
-// Test user credentials
-const TEST_USER = {
-  email: `test-${Date.now()}@example.com`,
-  password: 'Test123!@#',
-  newPassword: 'NewTest456!@#',
-  name: 'Test User',
-  updatedName: 'Updated Test User'
-};
 
 const USER_POOL_ID = process.env.VITE_USER_POOL_ID;
 const REGION = process.env.VITE_AWS_REGION;
 
 describe('Backend Auth - Integration Flow', () => {
   let cognitoClient: CognitoIdentityProviderClient;
+  let currentTestUser: { email: string; password: string } | null = null;
 
   beforeAll(() => {
     cognitoClient = new CognitoIdentityProviderClient({ region: REGION });
   });
 
+  afterEach(async () => {
+    // Cleanup: If a test user exists, try to delete it
+    if (currentTestUser) {
+      try {
+        await cognitoClient.send(new AdminDeleteUserCommand({
+          UserPoolId: USER_POOL_ID,
+          Username: currentTestUser.email
+        }));
+      } catch (error) {
+        // Ignore errors during cleanup
+        console.log('Cleanup error (can be ignored):', error);
+      }
+      currentTestUser = null;
+    }
+  });
+
   describe('Complete Auth Flow', () => {
     it('should handle full auth lifecycle: create -> sign in -> update -> change password -> sign out -> sign in -> delete', async () => {
+      // Create unique test user for this test
+      const TEST_USER = {
+        email: `test-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,
+        password: 'Test123!@#',
+        newPassword: 'NewTest456!@#',
+        name: 'Test User',
+        updatedName: 'Updated Test User'
+      };
+      currentTestUser = { email: TEST_USER.email, password: TEST_USER.password };
+
       // 1. Create user with admin API
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
@@ -114,6 +132,14 @@ describe('Backend Auth - Integration Flow', () => {
 
   describe('Error Recovery Flow', () => {
     it('should handle failed operations and recovery', async () => {
+      // Create unique test user for this test
+      const TEST_USER = {
+        email: `test-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,
+        password: 'Test123!@#',
+        newPassword: 'NewTest456!@#'
+      };
+      currentTestUser = { email: TEST_USER.email, password: TEST_USER.password };
+
       // 1. Create user
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
