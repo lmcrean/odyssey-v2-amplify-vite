@@ -2,8 +2,8 @@ import { Amplify } from 'aws-amplify';
 import dotenv from 'dotenv';
 import path from 'path';
 
-// Load environment variables from .env.test
-dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
+// Load environment variables from .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 // Configure Amplify with test environment settings
 Amplify.configure({
