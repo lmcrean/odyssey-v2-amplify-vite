@@ -1,7 +1,7 @@
 import '@aws-amplify/ui-react/styles.css';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Authenticator } from '@aws-amplify/ui-react';
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { AuthStatus } from '../__tests__/mocks/auth/types/auth.types';
@@ -18,6 +18,16 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
   const [newPassword, setNewPassword] = useState('');
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [newDisplayName, setNewDisplayName] = useState('');
+  const [previousAuthStatus, setPreviousAuthStatus] = useState<AuthStatus>(authStatus);
+
+  useEffect(() => {
+    if (previousAuthStatus !== authStatus) {
+      if (authStatus === 'authenticated') {
+        toast.success('Successfully signed in', { autoClose: 3000 });
+      }
+      setPreviousAuthStatus(authStatus);
+    }
+  }, [authStatus, previousAuthStatus]);
 
   const handleChangeDisplayName = async () => {
     if (!newDisplayName.trim()) {
@@ -65,6 +75,18 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
     }
   };
 
+  const handleSignOut = async (signOut?: () => void) => {
+    try {
+      if (signOut) {
+        await signOut();
+        toast.success('Successfully signed out', { autoClose: 3000 });
+      }
+    } catch (error) {
+      console.error('Failed to sign out:', error);
+      toast.error('Failed to sign out. Please try again.', { autoClose: 3000 });
+    }
+  };
+
   return (
     <Authenticator>
       {({ signOut, user }) => (
@@ -98,7 +120,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
                 </button>
 
                 <button
-                  onClick={signOut}
+                  onClick={() => handleSignOut(signOut)}
                   className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded w-full"
                   role="button"
                   aria-label="Sign Out"
@@ -256,7 +278,7 @@ export const AuthComponent: React.FC<AuthComponentProps> = ({ authStatus = 'unau
                             await deleteUser();
                             toast.success('Account deleted successfully', { autoClose: 3000 });
                             setShowDeleteModal(false);
-                            signOut?.();
+                            handleSignOut(signOut);
                           } catch (error) {
                             console.error('Failed to delete account:', error);
                             toast.error('Failed to delete account. Please try again.', { autoClose: 3000 });
