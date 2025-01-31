@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { signIn, signOut, updatePassword, deleteUser, getCurrentUser, fetchUserAttributes, updateUserAttributes } from 'aws-amplify/auth';
+import { signIn, signOut, updatePassword, deleteUser, fetchUserAttributes, updateUserAttributes } from 'aws-amplify/auth';
 import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import '../unit/setup';
 
@@ -59,6 +59,9 @@ describe('Backend Auth - Stress Tests', () => {
       const results = await Promise.allSettled(
         updates.map(update => updateUserAttributes(update))
       );
+      
+      // Verify at least some operations succeeded
+      expect(results.some(result => result.status === 'fulfilled')).toBe(true);
 
       // Verify final state
       const finalAttributes = await fetchUserAttributes();
@@ -105,6 +108,9 @@ describe('Backend Auth - Stress Tests', () => {
           })
         )
       );
+      
+      // Verify at least some operations succeeded
+      expect(results.some(result => result.status === 'fulfilled')).toBe(true);
 
       // Sign out to test final password
       await signOut();
