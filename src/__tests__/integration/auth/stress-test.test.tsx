@@ -5,6 +5,7 @@ import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-r
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { toast } from 'react-toastify';
 import { performAuthFlow, authFlowSteps } from '../../utils/auth/flows';
+import { UpdateUserAttributesOutput } from 'aws-amplify/auth';
 
 // Mock Amplify UI components
 vi.mock('@aws-amplify/ui-react', () => ({
@@ -122,13 +123,13 @@ describe('Auth Stress Tests', () => {
     it('handles alternating success/failure pattern', async () => {
       // Mock alternating failures
       vi.mocked(updateUserAttributes)
-        .mockResolvedValueOnce({}) // First call succeeds
-        .mockRejectedValueOnce(new Error('Failed to update display name')) // Second call fails
-        .mockResolvedValueOnce({}); // Third call succeeds
+        .mockResolvedValueOnce({} as UpdateUserAttributesOutput) // First call succeeds
+        .mockRejectedValueOnce(new Error('Mock error')) // Second call fails
+        .mockResolvedValueOnce({} as UpdateUserAttributesOutput); // Third call succeeds
 
       vi.mocked(updatePassword)
         .mockRejectedValueOnce(new Error('Failed to update password')) // First call fails
-        .mockResolvedValueOnce({}) // Second call succeeds
+        .mockResolvedValueOnce(undefined) // Second call succeeds
         .mockRejectedValueOnce(new Error('Failed to update password')); // Third call fails
 
       const flow = {
@@ -178,7 +179,7 @@ describe('Auth Stress Tests', () => {
     it('handles mixed operation flow with partial failures', async () => {
       // Mock specific failures
       vi.mocked(updateUserAttributes)
-        .mockResolvedValueOnce({ sub: 'test', email: 'test@test.com' }) // First username change succeeds
+        .mockResolvedValueOnce({} as UpdateUserAttributesOutput) // First username change succeeds
         .mockRejectedValueOnce(new Error('Failed to update display name')); // Second username change fails
 
       vi.mocked(updatePassword)
