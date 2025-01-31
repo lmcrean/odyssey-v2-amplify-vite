@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterEach } from 'vitest';
-import { signIn, signOut, updatePassword, deleteUser, getCurrentUser, fetchUserAttributes, updateUserAttributes } from 'aws-amplify/auth';
+import { signIn, signOut, updatePassword, deleteUser, fetchUserAttributes, updateUserAttributes } from 'aws-amplify/auth';
 import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand, AdminDisableUserCommand, AdminEnableUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import '../unit/setup';
 
