@@ -2,6 +2,7 @@ import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AuthComponent } from '../../../components/AuthComponent';
 import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
+import { AuthStatus } from '../../mocks/auth/types/auth.types';
 
 // Mock Amplify UI components
 vi.mock('@aws-amplify/ui-react', () => ({
@@ -21,15 +22,18 @@ vi.mock('react-toastify', () => ({
   ToastContainer: () => null,
 }));
 
+// Import toast for assertions
+import { toast } from 'react-toastify';
+
 describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     await act(async () => {
-      render(<AuthComponent authStatus="authenticated" />);
+      render(<AuthComponent authStatus={'authenticated' as AuthStatus} />);
     });
   });
 
-  it('shows toast notifications during successful sign out', async () => {
+  it('shows success toast notification during successful sign out', async () => {
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
     expect(signOutButton).toBeInTheDocument();
     
@@ -38,6 +42,7 @@ describe('Auth Flow Integration', () => {
     });
 
     expect(mockAmplifySignOut).toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith('Successfully signed out', { autoClose: 3000 });
   });
 
   it('shows error toast when sign out fails', async () => {
@@ -51,5 +56,6 @@ describe('Auth Flow Integration', () => {
     });
 
     expect(mockAmplifySignOut).toHaveBeenCalled();
+    expect(toast.error).toHaveBeenCalledWith('Failed to sign out. Please try again.', { autoClose: 3000 });
   });
 }); 
