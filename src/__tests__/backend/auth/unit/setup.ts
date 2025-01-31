@@ -9,9 +9,8 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
 Amplify.configure({
   Auth: {
     Cognito: {
-      userPoolId: process.env.VITE_USER_POOL_ID,
-      userPoolClientId: process.env.VITE_USER_POOL_CLIENT_ID,
-      region: process.env.VITE_AWS_REGION
+      userPoolId: process.env.VITE_USER_POOL_ID as string,
+      userPoolClientId: process.env.VITE_USER_POOL_CLIENT_ID as string
     }
   }
 }); 
