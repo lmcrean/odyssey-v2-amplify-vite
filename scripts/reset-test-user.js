@@ -8,10 +8,10 @@ process.on('unhandledRejection', (error) => {
   process.exit(1);
 });
 
-// Load environment variables from .env.test
-dotenv.config({ path: path.resolve(process.cwd(), '.env.test') });
+// Load environment variables from .env
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
-console.log('Environment variables loaded from:', path.resolve(process.cwd(), '.env.test'));
+console.log('Environment variables loaded from:', path.resolve(process.cwd(), '.env'));
 console.log('Environment variables loaded:', {
   TEST_USER_EMAIL: process.env.TEST_USER_EMAIL,
   TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD ? '[REDACTED]' : undefined
