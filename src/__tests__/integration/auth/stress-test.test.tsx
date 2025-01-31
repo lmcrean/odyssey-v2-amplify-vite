@@ -204,8 +204,13 @@ describe('Auth Stress Tests', () => {
 
       await performAuthFlow(flow);
 
-      // Successful operations: first username change, second password change, delete account
-      expect(toast.success).toHaveBeenCalledTimes(3);
+      // Successful operations: 
+      // - First login
+      // - First username change
+      // - Second login
+      // - Second password change
+      // - Delete account
+      expect(toast.success).toHaveBeenCalledTimes(5);
       expect(toast.error).toHaveBeenCalledTimes(2); // Failed username change and password change
       expect(updateUserAttributes).toHaveBeenCalledTimes(2);
       expect(updatePassword).toHaveBeenCalledTimes(2);
