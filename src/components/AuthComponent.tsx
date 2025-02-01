@@ -295,9 +295,32 @@ const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ signOut, us
   );
 };
 
-const AuthComponent: React.FC<AuthComponentProps> = () => {
+interface AuthenticatorContentProps {
+  signOut?: () => void;
+  user?: {
+    username: string;
+    signInDetails?: {
+      loginId?: string;
+    };
+  };
+}
+
+const AuthenticatorContent: React.FC<AuthenticatorContentProps> = ({ signOut, user }) => {
   const [hasShownSignInToast, setHasShownSignInToast] = useState(false);
 
+  useEffect(() => {
+    if (user && !hasShownSignInToast) {
+      toast.success('Successfully signed in', { autoClose: 3000 });
+      setHasShownSignInToast(true);
+    }
+  }, [user, hasShownSignInToast]);
+
+  if (!user || !signOut) return null;
+
+  return <AuthenticatedContent signOut={signOut} user={user} />;
+};
+
+const AuthComponent: React.FC<AuthComponentProps> = () => {
   return (
     <>
       <ToastContainer 
@@ -313,22 +336,7 @@ const AuthComponent: React.FC<AuthComponentProps> = () => {
         theme="light"
       />
       <Authenticator>
-        {({ signOut, user }) => {
-          useEffect(() => {
-            if (user && !hasShownSignInToast) {
-              toast.success('Successfully signed in', { autoClose: 3000 });
-              setHasShownSignInToast(true);
-            }
-          }, [user, hasShownSignInToast]);
-
-          return (
-            <>
-              {user && signOut && (
-                <AuthenticatedContent signOut={signOut} user={user} />
-              )}
-            </>
-          );
-        }}
+        {(props) => <AuthenticatorContent {...props} />}
       </Authenticator>
     </>
   );
