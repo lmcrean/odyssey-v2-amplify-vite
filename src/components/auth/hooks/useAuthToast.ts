@@ -1,15 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 
 export const useAuthToast = (user: any) => {
-  const [hasShownSignInToast, setHasShownSignInToast] = useState(false);
+  const hasShownSignInToastRef = useRef(false);
 
   useEffect(() => {
-    if (user && !hasShownSignInToast) {
+    if (user && !hasShownSignInToastRef.current) {
       toast.success('Successfully signed in', { autoClose: 3000 });
-      setHasShownSignInToast(true);
+      hasShownSignInToastRef.current = true;
     }
-  }, [user, hasShownSignInToast]);
+  }, [user]);
 
-  return { hasShownSignInToast };
+  return { hasShownSignInToast: hasShownSignInToastRef.current };
 }; 
