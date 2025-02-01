@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { AuthComponent } from '../../../components/AuthComponent';
+import { AuthComponent } from '../../../components/auth';
 import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
 import { AuthStatus } from '../../mocks/auth/types/auth.types';
 
