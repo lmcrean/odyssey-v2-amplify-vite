@@ -9,9 +9,17 @@ export async function expectSuccessToast(page: Page, message: string) {
   // Wait for toast container to be mounted
   await page.waitForSelector('.Toastify', { state: 'attached' });
   
-  const toast = page.locator('.Toastify__toast--success');
-  // if not visible, scan the page for what elements we can see
+  // Find all success toasts with specific message
+  const toasts = page.locator('.Toastify__toast--success', {
+    hasText: message
+  });
+
+  // Wait for at least one toast to be visible
+  await expect(toasts.first()).toBeVisible({ timeout: 10000 });
   
-  await expect(toast).toBeVisible();
-  await expect(toast).toContainText(message);
+  // Verify the exact message
+  await expect(toasts.first()).toContainText(message);
+
+  // Verify there is exactly one toast with this message
+  await expect(toasts).toHaveCount(1, { timeout: 10000 });
 } 
