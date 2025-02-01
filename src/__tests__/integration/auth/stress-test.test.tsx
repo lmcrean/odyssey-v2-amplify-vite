@@ -146,7 +146,12 @@ describe('Auth Stress Tests', () => {
 
       await performAuthFlow(flow);
 
-      expect(toast.success).toHaveBeenCalledTimes(3); // 3 successful operations
+      // Successful operations:
+      // - Initial sign in (1)
+      // - First username change (1)
+      // - Second password change (1)
+      // - Third username change (1)
+      expect(toast.success).toHaveBeenCalledTimes(4); // 3 successful operations + initial sign in
       expect(toast.error).toHaveBeenCalledTimes(3); // 3 failed operations
       expect(updateUserAttributes).toHaveBeenCalledTimes(3);
       expect(updatePassword).toHaveBeenCalledTimes(3);
@@ -205,12 +210,13 @@ describe('Auth Stress Tests', () => {
       await performAuthFlow(flow);
 
       // Successful operations: 
-      // - First login
-      // - First username change
-      // - Second login
-      // - Second password change
-      // - Delete account
-      expect(toast.success).toHaveBeenCalledTimes(5);
+      // - Initial sign in (1)
+      // - First username change (1)
+      // - Second login (1)
+      // - Second password change (1)
+      // - Delete account (1)
+      // - Sign out (1)
+      expect(toast.success).toHaveBeenCalledTimes(6);
       expect(toast.error).toHaveBeenCalledTimes(2); // Failed username change and password change
       expect(updateUserAttributes).toHaveBeenCalledTimes(2);
       expect(updatePassword).toHaveBeenCalledTimes(2);
