@@ -5,23 +5,23 @@ import { defineAuth } from '@aws-amplify/backend';
  * @see https://docs.amplify.aws/gen2/build-a-backend/auth
  */
 export const auth = defineAuth({
+  name: 'odyssey-auth',
   loginWith: {
-    email: {
-      verificationEmailSubject: 'Welcome to Odyssey! Verify your email',
-      verificationEmailBody: 'Thanks for signing up! Your verification code is {####}',
-    },
+    email: true
   },
   userAttributes: {
-    profilePicture: {
-      mutable: true,
-      required: false,
+    email: {
+      required: true,
+      mutable: false
     },
-    displayName: {
-      mutable: true,
+    name: {
       required: false,
-    },
+      mutable: true
+    }
   },
-  multifactor: false,
+  multifactor: {
+    mode: 'OFF'
+  },
   passwordPolicy: {
     minLength: 8,
     requireNumbers: true,
