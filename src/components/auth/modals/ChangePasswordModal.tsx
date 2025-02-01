@@ -34,12 +34,12 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-      <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-        <h2 className="text-xl font-bold mb-4">Change Password</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center">
+      <div className="bg-gray-700 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h2 className="text-xl font-bold mb-4 text-gray-100">Change Password</h2>
         <div className="space-y-4">
           <div>
-            <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="oldPassword" className="block text-sm font-medium text-gray-200">
               Current Password
             </label>
             <input
@@ -47,11 +47,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
               id="oldPassword"
               value={oldPassword}
               onChange={(e) => setOldPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-500 bg-gray-600 text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="newPassword" className="block text-sm font-medium text-gray-200">
               New Password
             </label>
             <input
@@ -59,11 +59,11 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
               id="newPassword"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-500 bg-gray-600 text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700">
+            <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-200">
               Confirm New Password
             </label>
             <input
@@ -71,7 +71,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
               id="confirmNewPassword"
               value={confirmNewPassword}
               onChange={(e) => setConfirmNewPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              className="mt-1 block w-full rounded-md border-gray-500 bg-gray-600 text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
             />
           </div>
         </div>
@@ -83,7 +83,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
               setNewPassword('');
               setConfirmNewPassword('');
             }}
-            className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded"
+            className="flex-1 bg-gray-600 hover:bg-gray-700 text-gray-100 font-bold py-2 px-4 rounded transition duration-200"
             role="button"
             aria-label="Cancel"
           >
@@ -91,7 +91,7 @@ export const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ isOpen
           </button>
           <button
             onClick={handleChangePassword}
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-gray-100 font-bold py-2 px-4 rounded transition duration-200"
             role="button"
             aria-label="Change Password"
             data-testid="submit-change-password"
