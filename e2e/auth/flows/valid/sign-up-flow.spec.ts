@@ -48,5 +48,7 @@ test.describe('Valid Sign Up Flow', () => {
     await expect(page.getByRole('button', { name: /sign out/i }))
       .toBeVisible({ timeout: 5000 });
 
+    // 6. Delete test user using backend command
+    await deleteTestAccount(uniqueEmail);
   });
 });
