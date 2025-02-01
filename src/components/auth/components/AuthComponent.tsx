@@ -8,13 +8,68 @@ import { AuthenticatorContent } from './AuthenticatorContent';
 // Add custom styles for the Amplify container
 const customStyles = `
   [data-amplify-router] {
-    background-color: #2D1B69 !important;
-    border-radius: 8px;
+    background-color:rgb(27, 32, 105) !important;
+    border-radius: 20px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-width: 0 !important;
+  }
+
+  /*everything inside the router*/
+  [data-amplify-router] > *, [data-amplify-router] > * > *, [data-amplify-router] > * > * > * {
+    border-width: 0 !important;
+  }
+
+  .amplify-input {
+    background-color: #16154ba1 !important;
+    color:rgba(222, 222, 223, 0.89) !important;
+  }
+
+  label.amplify-label {
+    color:rgba(222, 222, 223, 0.89) !important;
+  }
+
+  .amplify-tabs__item--active {
+    background-color: #16154ba1 !important;
+    color:rgba(222, 222, 223, 0.89) !important;
+  }
+
+  .amplify-tabs__item {
+    background-color:rgba(34, 21, 75, 0.63) !important;
+    color:rgba(222, 222, 223, 0.89) !important;
+  }
+
+  .amplify-tabs__item:hover {
+    background-color:rgba(24, 29, 88, 0.63) !important;
+    color:rgba(228, 235, 206, 0.89) !important;
+  }
+
+  .amplify-tabs__list {
+    border-style: none !important;
+  }
+
+  .amplify-tabs__item--active {
+    border-bottom-width: 2px;
+    border-top-width: 0;
+    background-color:rgb(27, 32, 105) !important;
+  }
+
+  .amplify-tabs__item {
+    border-top-width: 0 !important;
+  }
+
+  /* First tab (Sign In) */
+  .amplify-tabs__list button:nth-child(1) {
+    border-radius: 20px 0 0 0 !important;
+  }
+
+  /* Second tab (Create Account) */
+  .amplify-tabs__list button:nth-child(2) {
+    border-radius: 0 20px 0 0 !important;
   }
 `;
 
 export const AuthComponent: React.FC<AuthComponentProps> = () => {
+
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <style>{customStyles}</style>
