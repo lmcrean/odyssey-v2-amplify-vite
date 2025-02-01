@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { AuthComponent } from '../../../components/AuthComponent';
+import { AuthComponent } from '../../../components/auth';
 
 // Mock toast notifications
 vi.mock('react-toastify', () => ({
