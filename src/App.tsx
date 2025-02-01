@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AuthComponent } from './components/AuthComponent';
+import { AuthComponent } from './components/auth';
 import { getCurrentUser } from 'aws-amplify/auth';
 import { AuthStatus } from './__tests__/mocks/auth/types/auth.types';
 import TailwindTest from './components/TailwindTest';
