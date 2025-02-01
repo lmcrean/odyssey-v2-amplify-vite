@@ -3,7 +3,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useState, useEffect } from 'react';
 import { Authenticator, useAuthenticator } from '@aws-amplify/ui-react';
-import type { AuthenticatorRenderProps } from '@aws-amplify/ui-react';
+import type { AuthenticatorProps } from '@aws-amplify/ui-react';
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
 import { AuthStatus } from '../__tests__/mocks/auth/types/auth.types';
 
@@ -13,7 +13,12 @@ interface AuthComponentProps {
 
 interface AuthenticatedContentProps {
   signOut: () => void;
-  user: NonNullable<AuthenticatorRenderProps['user']>;
+  user: {
+    username: string;
+    signInDetails?: {
+      loginId?: string;
+    };
+  };
 }
 
 const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ signOut, user }) => {
@@ -291,20 +296,43 @@ const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ signOut, us
 };
 
 const AuthComponent: React.FC<AuthComponentProps> = () => {
+  const [hasShownSignInToast, setHasShownSignInToast] = useState(false);
+
   return (
-    <Authenticator>
-      {({ signOut, user }) => (
-        <>
-          <ToastContainer position="top-right" />
-          {user && signOut && (
-            <AuthenticatedContent signOut={signOut} user={user} />
-          )}
-        </>
-      )}
-    </Authenticator>
+    <>
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="light"
+      />
+      <Authenticator>
+        {({ signOut, user }) => {
+          useEffect(() => {
+            if (user && !hasShownSignInToast) {
+              toast.success('Successfully signed in', { autoClose: 3000 });
+              setHasShownSignInToast(true);
+            }
+          }, [user, hasShownSignInToast]);
+
+          return (
+            <>
+              {user && signOut && (
+                <AuthenticatedContent signOut={signOut} user={user} />
+              )}
+            </>
+          );
+        }}
+      </Authenticator>
+    </>
   );
 };
 
 export { AuthComponent };
-
 export default AuthComponent; 
