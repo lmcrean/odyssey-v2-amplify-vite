@@ -123,7 +123,7 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
     await clickSignIn(page);
     console.log("Clicked sign in");
 
-    // Add explicit wait for auth-related network requests
+    // 3. Add explicit wait for auth-related network requests
     try {
       const authResponse = await Promise.race([
         page.waitForResponse(response => 
@@ -138,7 +138,7 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
         )
       ]);
 
-      // If we got a successful auth response, wait for the UI to update
+      // 4. If we got a successful auth response, wait for the UI to update
       if (authResponse.status() === 200) {
         // Wait for the auth status to be updated in the UI
         await page.waitForFunction(() => {
@@ -150,7 +150,7 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
         }, { timeout: 10000 });
         console.log('Auth tokens found in localStorage');
 
-        // Wait for the authenticated view to be rendered
+        // 5. Wait for the authenticated view to be rendered
         await page.waitForSelector('[data-testid="authenticated-view"]', { timeout: 10000 });
         console.log('Authenticated view rendered');
 
@@ -175,14 +175,24 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
         await expect(page.getByText('Sign Out')).toBeVisible();
         await expect(page.getByText('Delete Account')).toBeVisible();
 
-        // 3. Now test the sign-out flow
+        // 6. Now Look for the success toast
+        await expectSuccessToast(page, 'Successfully signed in');
+
+        // 7. Now test the sign-out flow
         console.log("Starting sign-out flow");
         
         // Click the sign-out button
         const signOutButton = page.getByRole('button', { name: 'Sign Out' });
+
         await expect(signOutButton).toBeVisible();
         await signOutButton.click();
         console.log("Clicked sign out button");
+
+        // Add a small delay to ensure the toast has time to appear
+        await page.waitForTimeout(1000);
+
+        // Verify success toast appears
+        await expectSuccessToast(page, 'Successfully signed out');
 
         // Debug the DOM state immediately after clicking sign out
         console.log("DOM state after sign out click:", await page.evaluate(() => document.body.innerHTML));
