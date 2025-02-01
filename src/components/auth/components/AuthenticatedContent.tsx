@@ -21,15 +21,15 @@ export const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ sign
   };
 
   return (
-    <div className="p-4" data-testid="authenticated-view">
-      <h1 className="text-2xl font-bold mb-4">
+    <div className="p-4 bg-gray-900 text-gray-100" data-testid="authenticated-view">
+      <h1 className="text-2xl font-bold mb-4 text-gray-100">
         Hello, {user?.signInDetails?.loginId || 'User'}!
       </h1>
       
       <div className="space-y-4">
         <button
           onClick={() => setShowChangeDisplayNameModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-gray-100 font-bold py-2 px-4 rounded w-full transition duration-200"
           role="button"
           aria-label="Change Display Name"
           data-testid="open-change-display-name-modal"
@@ -39,7 +39,7 @@ export const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ sign
 
         <button
           onClick={() => setShowChangePasswordModal(true)}
-          className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-indigo-600 hover:bg-indigo-700 text-gray-100 font-bold py-2 px-4 rounded w-full transition duration-200"
           role="button"
           aria-label="Change Password"
           data-testid="open-change-password-modal"
@@ -49,7 +49,7 @@ export const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ sign
 
         <button
           onClick={handleSignOut}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-red-600 hover:bg-red-700 text-gray-100 font-bold py-2 px-4 rounded w-full transition duration-200"
           role="button"
           aria-label="Sign Out"
         >
@@ -58,7 +58,7 @@ export const AuthenticatedContent: React.FC<AuthenticatedContentProps> = ({ sign
         
         <button
           onClick={() => setShowDeleteModal(true)}
-          className="bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded w-full"
+          className="bg-red-800 hover:bg-red-900 text-gray-100 font-bold py-2 px-4 rounded w-full transition duration-200"
           role="button"
           aria-label="Delete Account"
           data-testid="open-delete-account-modal"
