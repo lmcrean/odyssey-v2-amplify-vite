@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach } from 'vitest';
-import AuthComponent from '../../../components/AuthComponent';
+import { AuthComponent } from '../../../components/auth';
 import { withAuthenticator } from '../../mocks/auth/authenticator/components/withAuthenticator';
 
 // Create a wrapped component for testing
