@@ -3,7 +3,6 @@ import { Amplify } from 'aws-amplify';
 import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { fillSignInForm, clickSignIn } from '../../../utils/auth/form';
-import { expectSuccessToast, expectInfoToast } from '../../../utils/toast';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -109,6 +108,9 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
     }
 
     // 2. Fill in the sign-in form and submit
+    await page.waitForSelector('[data-amplify-authenticator]', { timeout: 10000 });
+    console.log("Amplify Authenticator rendered");
+
     await fillSignInForm(page, existingUser.email, existingUser.password);
     console.log("Filled in sign in form");
 
@@ -150,8 +152,23 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
         }, { timeout: 10000 });
         console.log('Auth tokens found in localStorage');
 
-        // Wait for the authenticated view to be rendered
-        await page.waitForSelector('[data-testid="authenticated-view"]', { timeout: 10000 });
+        // Add a small delay to allow the Amplify Authenticator to update its internal state
+        await page.waitForTimeout(2000);
+
+        // Debug the DOM state before looking for the button
+        console.log("DOM state before looking for button:", await page.evaluate(() => document.body.innerHTML));
+
+        // Debug all buttons with their properties
+        const buttons = await page.locator('button').all();
+        for (const button of buttons) {
+          const text = await button.textContent();
+          const ariaLabel = await button.getAttribute('aria-label');
+          const isVisible = await button.isVisible();
+          console.log('Button found:', { text, ariaLabel, isVisible });
+        }
+
+        // Wait for the Change Display Name button to be visible (indicates authenticated view is rendered)
+        await page.waitForSelector('button[aria-label="Change Display Name"]', { timeout: 10000 });
         console.log('Authenticated view rendered');
 
         // Debug page state after sign-in attempt
