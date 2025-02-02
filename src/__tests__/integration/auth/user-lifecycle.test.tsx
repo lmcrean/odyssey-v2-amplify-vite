@@ -12,7 +12,7 @@ vi.mock('@aws-amplify/ui-react', () => ({
     user: { 
       username: 'testuser',
       attributes: {
-        'custom:display_name': 'Test User'
+        'givenName': 'Test User'
       }
     }
   })
@@ -70,7 +70,7 @@ describe('User Lifecycle Integration', () => {
 
         expect(updateUserAttributes).toHaveBeenCalledWith({
           userAttributes: {
-            'custom:display_name': 'New Display Name'
+            'givenName': 'New Display Name'
           }
         });
         expect(toast.success).toHaveBeenCalledWith('Display name changed successfully', { autoClose: 3000 });
@@ -122,7 +122,7 @@ describe('User Lifecycle Integration', () => {
 
         expect(updateUserAttributes).toHaveBeenCalledWith({
           userAttributes: {
-            'custom:display_name': 'New Display Name'
+            'givenName': 'New Display Name'
           }
         });
         expect(toast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.', { autoClose: 3000 });
