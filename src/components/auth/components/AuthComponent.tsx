@@ -66,6 +66,10 @@ const customStyles = `
   .amplify-tabs__list button:nth-child(2) {
     border-radius: 0 20px 0 0 !important;
   }
+
+  .amplify-heading, .amplify-text {
+    color: #d3e0bd;
+  }
 `;
 
 export const AuthComponent: React.FC<AuthComponentProps> = () => {
