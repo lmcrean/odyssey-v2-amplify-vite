@@ -7,6 +7,7 @@ interface ChangeDisplayNameModalProps extends ModalProps {}
 
 export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ isOpen, onClose }) => {
   const [newDisplayName, setNewDisplayName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleChangeDisplayName = async () => {
     if (!newDisplayName.trim()) {
@@ -14,22 +15,21 @@ export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ 
       return;
     }
 
+    setIsLoading(true);
     try {
-      toast.info('Changing display name...', { autoClose: 3000 });
       await updateUserAttributes({
         userAttributes: {
-          preferredUsername: newDisplayName.trim()
+          nickname: newDisplayName.trim()
         }
       });
       toast.success('Display name changed successfully', { autoClose: 3000 });
-      onClose();
       setNewDisplayName('');
+      onClose();
     } catch (error) {
       console.error('Failed to change display name:', error);
-      const errorMessage = error instanceof Error && error.message === 'Display name already taken'
-        ? 'This display name is already taken. Please choose another.'
-        : 'Failed to change display name. Please try again.';
-      toast.error(errorMessage, { autoClose: 3000 });
+      toast.error('Failed to change display name. Please try again.', { autoClose: 3000 });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -50,15 +50,13 @@ export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ 
               value={newDisplayName}
               onChange={(e) => setNewDisplayName(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-500 bg-gray-600 text-gray-100 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+              data-testid="new-display-name-input"
             />
           </div>
         </div>
         <div className="mt-6 flex space-x-4">
           <button
-            onClick={() => {
-              onClose();
-              setNewDisplayName('');
-            }}
+            onClick={onClose}
             className="flex-1 bg-gray-600 hover:bg-gray-700 text-gray-100 font-bold py-2 px-4 rounded transition duration-200"
             role="button"
             aria-label="Cancel"
@@ -67,12 +65,11 @@ export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ 
           </button>
           <button
             onClick={handleChangeDisplayName}
-            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-gray-100 font-bold py-2 px-4 rounded transition duration-200"
-            role="button"
-            aria-label="Change Display Name"
+            className={`flex-1 ${isLoading ? 'bg-indigo-400' : 'bg-indigo-500 hover:bg-indigo-600'} text-white font-bold py-2 px-4 rounded transition duration-200`}
+            disabled={isLoading}
             data-testid="submit-change-display-name"
           >
-            Change Display Name
+            {isLoading ? 'Changing...' : 'Change Display Name'}
           </button>
         </div>
       </div>
