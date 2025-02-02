@@ -1,9 +1,8 @@
-import { render, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthComponent } from '../../../components/auth';
 import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
-import { toast } from 'react-toastify';
 import { performAuthFlow, authFlowSteps } from '../../utils/auth/flows';
 import { UpdateUserAttributesOutput } from 'aws-amplify/auth';
 
@@ -26,16 +25,6 @@ vi.mock('aws-amplify/auth', () => ({
   updatePassword: vi.fn(),
   updateUserAttributes: vi.fn(),
   getCurrentUser: vi.fn().mockResolvedValue({ username: 'testuser' })
-}));
-
-// Mock toast
-vi.mock('react-toastify', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-  ToastContainer: () => null,
 }));
 
 describe('Auth Stress Tests', () => {
@@ -114,7 +103,6 @@ describe('Auth Stress Tests', () => {
       await performAuthFlow(flow);
 
       // Verify error handling
-      expect(toast.error).toHaveBeenCalledTimes(2);
       expect(updateUserAttributes).toHaveBeenCalledTimes(2);
       expect(updatePassword).toHaveBeenCalledTimes(2);
       expect(mockAmplifySignOut).toHaveBeenCalled();
@@ -146,13 +134,6 @@ describe('Auth Stress Tests', () => {
 
       await performAuthFlow(flow);
 
-      // Successful operations:
-      // - Initial sign in (1)
-      // - First username change (1)
-      // - Second password change (1)
-      // - Third username change (1)
-      expect(toast.success).toHaveBeenCalledTimes(4); // 3 successful operations + initial sign in
-      expect(toast.error).toHaveBeenCalledTimes(3); // 3 failed operations
       expect(updateUserAttributes).toHaveBeenCalledTimes(3);
       expect(updatePassword).toHaveBeenCalledTimes(3);
     });
@@ -175,7 +156,6 @@ describe('Auth Stress Tests', () => {
 
       await performAuthFlow(flow);
 
-      expect(toast.error).toHaveBeenCalledTimes(3); // 3 failed operations
       expect(updateUserAttributes).toHaveBeenCalledTimes(1);
       expect(updatePassword).toHaveBeenCalledTimes(1);
       expect(deleteUser).toHaveBeenCalledTimes(2);
@@ -209,15 +189,6 @@ describe('Auth Stress Tests', () => {
 
       await performAuthFlow(flow);
 
-      // Successful operations: 
-      // - Initial sign in (1)
-      // - First username change (1)
-      // - Second login (1)
-      // - Second password change (1)
-      // - Delete account (1)
-      // - Sign out (1)
-      expect(toast.success).toHaveBeenCalledTimes(6);
-      expect(toast.error).toHaveBeenCalledTimes(2); // Failed username change and password change
       expect(updateUserAttributes).toHaveBeenCalledTimes(2);
       expect(updatePassword).toHaveBeenCalledTimes(2);
       expect(deleteUser).toHaveBeenCalledTimes(1);

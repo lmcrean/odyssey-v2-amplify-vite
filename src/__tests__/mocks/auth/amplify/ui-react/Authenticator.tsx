@@ -2,6 +2,7 @@ import React from 'react';
 import { vi } from 'vitest';
 
 export const mockSignOut = vi.fn();
+export const mockSignUp = vi.fn();
 export const mockUser = {
   username: 'authenticated user',
   signInDetails: {
@@ -13,10 +14,11 @@ export const mockUser = {
 interface AuthenticatorProps {
   children: (props: {
     signOut: typeof mockSignOut;
+    signUp: typeof mockSignUp;
     user: typeof mockUser;
   }) => React.ReactNode;
 }
 
 export const Authenticator: React.FC<AuthenticatorProps> = ({ children }) => {
-  return <>{children({ signOut: mockSignOut, user: mockUser })}</>;
+  return <>{children({ signOut: mockSignOut, signUp: mockSignUp, user: mockUser })}</>;
 }; 
