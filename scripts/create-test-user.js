@@ -1,6 +1,6 @@
 import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand } from "@aws-sdk/client-cognito-identity-provider";
 
-const USER_POOL_ID = 'eu-west-2_UMEqZ05VW';
+const USER_POOL_ID = 'eu-west-2_HIelfjWHp';
 const TEST_EMAIL = 'test-delete-account@example.com';
 const TEST_PASSWORD = 'dcd0c6a4dbfc9b93823fb55398b5580eAa1!';
 
