@@ -3,17 +3,17 @@ import { signIn, signOut, updatePassword, deleteUser, fetchUserAttributes, updat
 import { CognitoIdentityProviderClient, AdminCreateUserCommand, AdminSetUserPasswordCommand, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import '../unit/setup';
 
-// Test user credentials with timestamps to ensure uniqueness
-const TEST_USER = {
-  email: `test-${Date.now()}@example.com`,
+const USER_POOL_ID = process.env.VITE_USER_POOL_ID;
+const REGION = process.env.VITE_AWS_REGION;
+
+// Helper function to create unique test user
+const createTestUser = () => ({
+  email: `test-${Date.now()}-${Math.random().toString(36).substring(2)}@example.com`,
   password: 'Test123!@#',
   newPassword: 'NewTest456!@#',
   name: 'Test User',
   updatedName: 'Updated Test User'
-};
-
-const USER_POOL_ID = process.env.VITE_USER_POOL_ID;
-const REGION = process.env.VITE_AWS_REGION;
+});
 
 describe('Backend Auth - Stress Tests', () => {
   let cognitoClient: CognitoIdentityProviderClient;
@@ -24,6 +24,7 @@ describe('Backend Auth - Stress Tests', () => {
 
   describe('Rapid Operation Sequences', () => {
     it('should handle rapid attribute updates', async () => {
+      const TEST_USER = createTestUser();
       // 1. Create user
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
@@ -72,6 +73,7 @@ describe('Backend Auth - Stress Tests', () => {
     });
 
     it('should handle rapid password changes', async () => {
+      const TEST_USER = createTestUser();
       // 1. Create user
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
@@ -142,6 +144,7 @@ describe('Backend Auth - Stress Tests', () => {
 
   describe('Mixed Operation Sequences', () => {
     it('should handle interleaved operations', async () => {
+      const TEST_USER = createTestUser();
       const uniqueId = Date.now();
       const email = `test-mixed-${uniqueId}@example.com`;
 
@@ -199,6 +202,7 @@ describe('Backend Auth - Stress Tests', () => {
     });
 
     it('should handle concurrent sign-in attempts', async () => {
+      const TEST_USER = createTestUser();
       // 1. Create user
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
@@ -237,6 +241,7 @@ describe('Backend Auth - Stress Tests', () => {
 
   describe('Recovery Scenarios', () => {
     it('should handle operation retry after failures', async () => {
+      const TEST_USER = createTestUser();
       // 1. Create user
       await cognitoClient.send(new AdminCreateUserCommand({
         UserPoolId: USER_POOL_ID,
