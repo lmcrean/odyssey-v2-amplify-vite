@@ -1,6 +1,7 @@
 import { CognitoIdentityProviderClient, AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+require('dotenv').config();
 
-const USER_POOL_ID = 'eu-west-2_UMEqZ05VW';
+const USER_POOL_ID = process.env.VITE_USER_POOL_ID;
 const TEST_EMAIL = 'test-delete-account@example.com';
 
 async function deleteTestUser() {
