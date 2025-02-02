@@ -5,8 +5,8 @@ import { deleteTestAccount } from '../../../utils/auth/backend/delete-test-accou
 test.describe('Complete Auth Lifecycle', () => {
   let testUserEmail: string;
 
-  // Add cleanup after each test
-  test.afterEach(async () => {
+  // Move cleanup to afterAll instead of afterEach
+  test.afterAll(async () => {
     try {
       // Clean up test account if email exists
       if (testUserEmail) {
@@ -61,9 +61,7 @@ test.describe('Complete Auth Lifecycle', () => {
     // Take a screenshot to debug
     await page.screenshot({ path: 'signup-confirmation.png' });
 
-    // Debug: Print all text content on the page
-    const textContent = await page.evaluate(() => document.body.textContent);
-    console.log('Page text content:', textContent);
+
 
     // Check for error messages first
     const errorLocator = page.getByText(/error|failed|invalid/i);
@@ -102,22 +100,61 @@ test.describe('Complete Auth Lifecycle', () => {
     // 6. Change display name three times
     for (let i = 1; i <= 3; i++) {
       console.log(`Attempting display name change ${i}`);
-      await page.getByTestId('open-change-display-name-modal').click();
-      const newName = `TestUser${i}${Date.now()}`;
-      console.log(`Setting new display name to: ${newName}`);
-      const nameInput = page.getByLabel(/new display name/i);
-      await nameInput.waitFor({ state: 'visible', timeout: 10000 });
-      await nameInput.fill(newName);
-      const submitButton = page.getByTestId('submit-change-display-name');
-      await submitButton.waitFor({ state: 'visible', timeout: 10000 });
-      await submitButton.click();
       try {
+        // Wait for any previous toasts to disappear
+        try {
+          await page.waitForFunction(() => {
+            const toasts = document.querySelectorAll('[role="alert"]');
+            return toasts.length === 0;
+          }, { timeout: 5000 });
+        } catch (error) {
+          console.log('No previous toasts found or timed out waiting for them to disappear');
+        }
+
+        const changeDisplayNameButton = page.getByTestId('open-change-display-name-modal');
+        await expect(changeDisplayNameButton).toBeVisible({ timeout: 10000 });
+        console.log('Change display name button is visible');
+        await changeDisplayNameButton.click();
+        console.log('Clicked change display name button');
+
+        const newName = `TestUser${i}${Date.now()}`;
+        console.log(`Setting new display name to: ${newName}`);
+        
+        const nameInput = page.getByLabel(/new display name/i);
+        await expect(nameInput).toBeVisible({ timeout: 10000 });
+        console.log('Display name input is visible');
+        await nameInput.fill(newName);
+        console.log('Filled display name input');
+
+        const submitButton = page.getByTestId('submit-change-display-name');
+        await expect(submitButton).toBeVisible({ timeout: 10000 });
+        console.log('Submit button is visible');
+        await submitButton.click();
+        console.log('Clicked submit button');
+
+        // Wait for loading toast
         await expect(page.getByText(/changing display name/i)).toBeVisible({ timeout: 10000 });
+        console.log('Saw loading message');
+
+        // Wait for success toast
         await expect(page.getByText(/display name changed successfully/i)).toBeVisible({ timeout: 10000 });
         console.log(`Successfully changed display name to: ${newName}`);
+
+        // Take a screenshot after success
+        await page.screenshot({ path: `display-name-change-success-${i}.png` });
+
+        // Wait for the success toast to disappear
+        await page.waitForTimeout(3500); // Wait a bit longer than the autoClose time
       } catch (error) {
-        console.error(`Failed to change display name to ${newName}:`, error);
+        console.error(`Failed to change display name in attempt ${i}:`, error);
+        // Take a screenshot on error
         await page.screenshot({ path: `display-name-change-error-${i}.png` });
+        // Get any error messages on the page
+        const errorText = await page.evaluate(() => {
+          const errorElements = document.querySelectorAll('[role="alert"]');
+          return Array.from(errorElements).map(el => el.textContent).join(', ');
+        });
+        console.error('Error messages on page:', errorText);
         throw error;
       }
     }
@@ -125,26 +162,83 @@ test.describe('Complete Auth Lifecycle', () => {
     // 7. Change password three times
     let currentPassword = password;
     for (let i = 1; i <= 3; i++) {
-      const newPassword = `NewPass${i}123!@#`;
-      
-      // Open change password modal
-      await page.getByTestId('open-change-password-modal').click();
-      await page.waitForTimeout(500); // Wait for modal to open
-      
-      // Fill in password form
-      await page.getByLabel(/current password/i).fill(currentPassword);
-      await page.getByLabel(/^new password$/i).fill(newPassword);
-      await page.getByLabel(/confirm new password/i).fill(newPassword);
-      
-      // Submit password change
-      await page.getByTestId('submit-change-password').click();
-      
-      // Wait for success toast and modal to close
-      await expect(page.getByText(/password changed successfully/i))
-        .toBeVisible({ timeout: 5000 });
-      await page.waitForTimeout(1000); // Wait for modal to close completely
-      
-      currentPassword = newPassword;
+      console.log(`Attempting password change ${i}`);
+      try {
+        // Wait for any previous toasts to disappear
+        try {
+          await page.waitForFunction(() => {
+            const toasts = document.querySelectorAll('[role="alert"]');
+            return toasts.length === 0;
+          }, { timeout: 5000 });
+        } catch (error) {
+          console.log('No previous toasts found or timed out waiting for them to disappear');
+        }
+
+        const newPassword = `NewPass${i}123!@#`;
+        
+        // Open change password modal
+        const changePasswordButton = page.getByTestId('open-change-password-modal');
+        await expect(changePasswordButton).toBeVisible({ timeout: 10000 });
+        console.log('Change password button is visible');
+        await changePasswordButton.click();
+        console.log('Clicked change password button');
+        
+        // Wait for current password field to be visible and interactable
+        const currentPasswordInput = page.getByLabel(/current password/i);
+        await expect(currentPasswordInput).toBeVisible({ timeout: 10000 });
+        await expect(currentPasswordInput).toBeEnabled({ timeout: 10000 });
+        console.log('Current password field is ready');
+        
+        // Fill current password
+        await currentPasswordInput.fill(currentPassword);
+        console.log('Filled current password');
+        
+        // Wait for and fill new password
+        const newPasswordInput = page.getByLabel(/^new password$/i);
+        await expect(newPasswordInput).toBeVisible({ timeout: 10000 });
+        await expect(newPasswordInput).toBeEnabled({ timeout: 10000 });
+        await newPasswordInput.fill(newPassword);
+        console.log('Filled new password');
+        
+        // Wait for and fill confirm password
+        const confirmPasswordInput = page.getByLabel(/confirm new password/i);
+        await expect(confirmPasswordInput).toBeVisible({ timeout: 10000 });
+        await expect(confirmPasswordInput).toBeEnabled({ timeout: 10000 });
+        await confirmPasswordInput.fill(newPassword);
+        console.log('Filled confirm password');
+        
+        // Submit password change
+        const submitButton = page.getByTestId('submit-change-password');
+        await expect(submitButton).toBeVisible({ timeout: 10000 });
+        await expect(submitButton).toBeEnabled({ timeout: 10000 });
+        console.log('Submit button is ready');
+        await submitButton.click();
+        console.log('Clicked submit button');
+        
+        // Wait for success toast
+        await expect(page.getByText(/password changed successfully/i))
+          .toBeVisible({ timeout: 10000 });
+        console.log(`Successfully changed password attempt ${i}`);
+
+        // Take a screenshot after success
+        await page.screenshot({ path: `password-change-success-${i}.png` });
+        
+        // Wait for modal to close and toast to disappear
+        await page.waitForTimeout(3500);
+        
+        currentPassword = newPassword;
+      } catch (error) {
+        console.error(`Failed to change password in attempt ${i}:`, error);
+        // Take a screenshot on error
+        await page.screenshot({ path: `password-change-error-${i}.png` });
+        // Get any error messages on the page
+        const errorText = await page.evaluate(() => {
+          const errorElements = document.querySelectorAll('[role="alert"]');
+          return Array.from(errorElements).map(el => el.textContent).join(', ');
+        });
+        console.error('Error messages on page:', errorText);
+        throw error;
+      }
     }
 
     // 8. Delete account through UI
