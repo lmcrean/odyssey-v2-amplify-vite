@@ -17,7 +17,7 @@ console.log('Environment variables loaded:', {
   TEST_USER_PASSWORD: process.env.TEST_USER_PASSWORD ? '[REDACTED]' : undefined
 });
 
-const USER_POOL_ID = 'eu-west-2_UMEqZ05VW';
+const USER_POOL_ID = process.env.VITE_USER_POOL_ID;
 const TEST_EMAIL = 'test-delete-account@example.com';
 
 const client = new CognitoIdentityProviderClient({ region: 'eu-west-2' });
