@@ -18,7 +18,7 @@ export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ 
       toast.info('Changing display name...', { autoClose: 3000 });
       await updateUserAttributes({
         userAttributes: {
-          name: newDisplayName.trim()
+          'custom:display_name': newDisplayName.trim()
         }
       });
       toast.success('Display name changed successfully', { autoClose: 3000 });
