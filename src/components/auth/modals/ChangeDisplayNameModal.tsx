@@ -17,12 +17,26 @@ export const ChangeDisplayNameModal: React.FC<ChangeDisplayNameModalProps> = ({ 
 
     setIsLoading(true);
     try {
+      // Clear any existing toasts
+      toast.dismiss();
+      
+      // Show loading toast
+      const loadingToast = toast.loading('Changing display name...', { autoClose: false });
+      
       await updateUserAttributes({
         userAttributes: {
           nickname: newDisplayName.trim()
         }
       });
-      toast.success('Display name changed successfully', { autoClose: 3000 });
+
+      // Update the loading toast to success
+      toast.update(loadingToast, {
+        render: 'Display name changed successfully',
+        type: 'success',
+        isLoading: false,
+        autoClose: 3000
+      });
+
       setNewDisplayName('');
       onClose();
     } catch (error) {
