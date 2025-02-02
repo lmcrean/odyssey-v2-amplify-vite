@@ -80,7 +80,7 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
     });
 
     // Navigate to the home page before each test
-    await page.goto('http://localhost:5175/');
+    await page.goto('http://localhost:5176/');
     await page.waitForLoadState('networkidle');
     console.log('Initial page load complete');
   });
