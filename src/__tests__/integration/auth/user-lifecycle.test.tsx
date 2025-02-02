@@ -1,40 +1,10 @@
+import './setup';
 import { render, screen, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthComponent } from '../../../components/auth';
-import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
 import { deleteUser, updatePassword, updateUserAttributes } from 'aws-amplify/auth';
-import { toast } from 'react-toastify';
-
-// Mock Amplify UI components
-vi.mock('@aws-amplify/ui-react', () => ({
-  Authenticator: ({ children }: any) => children({
-    signOut: mockAmplifySignOut,
-    user: { 
-      username: 'testuser',
-      attributes: {
-        'givenName': 'Test User'
-      }
-    }
-  })
-}));
-
-// Mock Amplify Auth
-vi.mock('aws-amplify/auth', () => ({
-  deleteUser: vi.fn(),
-  updatePassword: vi.fn(),
-  updateUserAttributes: vi.fn(),
-  getCurrentUser: vi.fn().mockResolvedValue({ username: 'testuser' })
-}));
-
-// Mock toast
-vi.mock('react-toastify', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-  ToastContainer: () => null,
-}));
+import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
+import { mockToast } from '../../mocks/toast';
 
 describe('User Lifecycle Integration', () => {
   beforeEach(() => {
@@ -70,10 +40,20 @@ describe('User Lifecycle Integration', () => {
 
         expect(updateUserAttributes).toHaveBeenCalledWith({
           userAttributes: {
-            'givenName': 'New Display Name'
+            'nickname': 'New Display Name'
           }
         });
-        expect(toast.success).toHaveBeenCalledWith('Display name changed successfully', { autoClose: 3000 });
+        
+        // Verify loading toast first
+        expect(mockToast.loading).toHaveBeenCalledWith('Changing display name...', { autoClose: false });
+        
+        // Then verify toast update
+        expect(mockToast.update).toHaveBeenCalledWith(expect.any(String), {
+          render: 'Display name changed successfully',
+          type: 'success',
+          isLoading: false,
+          autoClose: 3000
+        });
       });
 
       it('shows error when display name is empty', async () => {
@@ -96,7 +76,7 @@ describe('User Lifecycle Integration', () => {
         });
 
         expect(updateUserAttributes).not.toHaveBeenCalled();
-        expect(toast.error).toHaveBeenCalledWith('Display name cannot be empty', { autoClose: 3000 });
+        expect(mockToast.error).toHaveBeenCalledWith('Display name cannot be empty', { autoClose: 3000 });
       });
 
       it('shows error when display name change fails', async () => {
@@ -122,10 +102,10 @@ describe('User Lifecycle Integration', () => {
 
         expect(updateUserAttributes).toHaveBeenCalledWith({
           userAttributes: {
-            'givenName': 'New Display Name'
+            'nickname': 'New Display Name'
           }
         });
-        expect(toast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.', { autoClose: 3000 });
+        expect(mockToast.error).toHaveBeenCalledWith('Failed to change display name. Please try again.', { autoClose: 3000 });
       });
 
       it('closes modal and resets form on cancel', async () => {
@@ -155,7 +135,9 @@ describe('User Lifecycle Integration', () => {
           await fireEvent.click(changeDisplayNameButton);
         });
 
-        expect(screen.getByLabelText(/new display name/i)).toHaveValue('');
+        // The input should be empty string since we reset it in the component
+        const newDisplayNameInput = screen.getByLabelText(/new display name/i);
+        expect(newDisplayNameInput).toHaveValue('');
       });
     });
 
@@ -188,7 +170,7 @@ describe('User Lifecycle Integration', () => {
           oldPassword: 'oldPass123',
           newPassword: 'newPass123'
         });
-        expect(toast.success).toHaveBeenCalledWith('Password changed successfully', { autoClose: 3000 });
+        expect(mockToast.success).toHaveBeenCalledWith('Password changed successfully', { autoClose: 3000 });
       });
 
       it('shows error when passwords do not match', async () => {
@@ -216,7 +198,7 @@ describe('User Lifecycle Integration', () => {
         });
 
         expect(updatePassword).not.toHaveBeenCalled();
-        expect(toast.error).toHaveBeenCalledWith('New passwords do not match', { autoClose: 3000 });
+        expect(mockToast.error).toHaveBeenCalledWith('New passwords do not match', { autoClose: 3000 });
       });
 
       it('shows error when password change fails', async () => {
@@ -249,10 +231,10 @@ describe('User Lifecycle Integration', () => {
           oldPassword: 'oldPass123',
           newPassword: 'newPass123'
         });
-        expect(toast.error).toHaveBeenCalledWith('Failed to change password. Please try again.', { autoClose: 3000 });
+        expect(mockToast.error).toHaveBeenCalledWith('Failed to change password. Please try again.', { autoClose: 3000 });
       });
 
-      it('closes modal and resets form on cancel', async () => {
+      it('closes modal and resets form when cancel is clicked', async () => {
         // Open change password modal
         const changePasswordButton = screen.getByTestId('open-change-password-modal');
         await act(async () => {
@@ -290,57 +272,61 @@ describe('User Lifecycle Integration', () => {
       });
     });
 
-    it('allows user to delete their account', async () => {
-      // Open delete modal
-      const deleteButton = screen.getByRole('button', { name: /delete account/i });
-      await act(async () => {
-        await fireEvent.click(deleteButton);
+    describe('Delete Account', () => {
+      it('allows user to delete their account', async () => {
+        // Open delete account modal
+        const deleteAccountButton = screen.getByTestId('open-delete-account-modal');
+        await act(async () => {
+          await fireEvent.click(deleteAccountButton);
+        });
+
+        // Click confirm delete
+        const confirmDeleteButton = screen.getByTestId('confirm-delete-account');
+        await act(async () => {
+          await fireEvent.click(confirmDeleteButton);
+        });
+
+        expect(deleteUser).toHaveBeenCalled();
+        expect(mockToast.success).toHaveBeenCalledWith('Account deleted successfully', { autoClose: 3000 });
+        expect(mockAmplifySignOut).toHaveBeenCalled();
       });
 
-      // Confirm deletion
-      const confirmButton = screen.getByTestId('confirm-delete-account');
-      await act(async () => {
-        await fireEvent.click(confirmButton);
+      it('shows error when account deletion fails', async () => {
+        vi.mocked(deleteUser).mockRejectedValueOnce(new Error('Failed to delete account'));
+
+        // Open delete account modal
+        const deleteAccountButton = screen.getByTestId('open-delete-account-modal');
+        await act(async () => {
+          await fireEvent.click(deleteAccountButton);
+        });
+
+        // Click confirm delete
+        const confirmDeleteButton = screen.getByTestId('confirm-delete-account');
+        await act(async () => {
+          await fireEvent.click(confirmDeleteButton);
+        });
+
+        expect(deleteUser).toHaveBeenCalled();
+        expect(mockToast.error).toHaveBeenCalledWith('Failed to delete account. Please try again.', { autoClose: 3000 });
       });
 
-      expect(deleteUser).toHaveBeenCalled();
-      expect(mockAmplifySignOut).toHaveBeenCalled();
-    });
+      it('cancels account deletion when cancel is clicked', async () => {
+        // Open delete account modal
+        const deleteAccountButton = screen.getByTestId('open-delete-account-modal');
+        await act(async () => {
+          await fireEvent.click(deleteAccountButton);
+        });
 
-    it('shows error when account deletion fails', async () => {
-      vi.mocked(deleteUser).mockRejectedValueOnce(new Error('Failed to delete account'));
+        // Click cancel
+        const cancelButton = screen.getByRole('button', { name: /cancel/i });
+        await act(async () => {
+          await fireEvent.click(cancelButton);
+        });
 
-      // Open delete modal
-      const deleteButton = screen.getByRole('button', { name: /delete account/i });
-      await act(async () => {
-        await fireEvent.click(deleteButton);
+        expect(deleteUser).not.toHaveBeenCalled();
+        // We should not check for toast.success here since it's not relevant to cancellation
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       });
-
-      // Confirm deletion
-      const confirmButton = screen.getByTestId('confirm-delete-account');
-      await act(async () => {
-        await fireEvent.click(confirmButton);
-      });
-
-      expect(deleteUser).toHaveBeenCalled();
-      expect(toast.error).toHaveBeenCalledWith('Failed to delete account. Please try again.', { autoClose: 3000 });
-    });
-
-    it('cancels account deletion when cancel is clicked', async () => {
-      // Open delete modal
-      const deleteButton = screen.getByRole('button', { name: /delete account/i });
-      await act(async () => {
-        await fireEvent.click(deleteButton);
-      });
-
-      // Click cancel
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
-      await act(async () => {
-        await fireEvent.click(cancelButton);
-      });
-
-      expect(deleteUser).not.toHaveBeenCalled();
-      expect(screen.queryByText(/are you sure/i)).not.toBeInTheDocument();
     });
   });
 }); 
