@@ -14,19 +14,12 @@ export const auth = defineAuth({
       required: true,
       mutable: false
     },
-    name: {
+    nickname: {
       required: false,
       mutable: true
     }
   },
   multifactor: {
     mode: 'OFF'
-  },
-  passwordPolicy: {
-    minLength: 8,
-    requireNumbers: true,
-    requireSpecialCharacters: true,
-    requireUppercase: true,
-    requireLowercase: true,
-  },
+  }
 });
