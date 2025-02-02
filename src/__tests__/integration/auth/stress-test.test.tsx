@@ -14,7 +14,7 @@ vi.mock('@aws-amplify/ui-react', () => ({
     user: { 
       username: 'testuser',
       attributes: {
-        'custom:display_name': 'Test User'
+        'givenName': 'Test User'
       }
     }
   })
