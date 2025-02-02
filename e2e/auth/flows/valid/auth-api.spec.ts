@@ -1,13 +1,31 @@
 import { test, expect } from '@playwright/test';
 import { Amplify } from 'aws-amplify';
 import { signIn, signUp, signOut, getCurrentUser, updatePassword, deleteUser, fetchUserAttributes } from 'aws-amplify/auth';
-import { CognitoIdentityProviderClient, AdminConfirmSignUpCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, AdminConfirmSignUpCommand, AdminDeleteUserCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables from .env
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+
+// ANSI color codes for console output
+const YELLOW = '\x1b[33m';
+const RESET = '\x1b[0m';
+
+// Email limit error patterns
+const EMAIL_LIMIT_PATTERNS = [
+  'Exceeded daily email limit',
+  'Daily message quota exceeded',
+  'LimitExceededException',
+  'Email quota exceeded'
+];
+
+// Helper to check if error is related to email limits
+const isEmailLimitError = (error: any): boolean => {
+  const errorMessage = error?.message || '';
+  return EMAIL_LIMIT_PATTERNS.some(pattern => errorMessage.includes(pattern));
+};
 
 // Configure Amplify with test environment settings
 Amplify.configure({
@@ -33,44 +51,51 @@ test.describe('Auth API Backend Tests', () => {
     newPassword: 'NewTest456!@#'
   };
 
-  test('should handle complete auth lifecycle via Amplify API', async () => {
-    // Try to sign in first to check if user exists
+  // Clean up test user before tests if exists
+  test.beforeAll(async () => {
     try {
-      await signIn({
-        username: testUser.email,
-        password: testUser.password
-      });
-      // If we get here, user exists and is confirmed
-      console.log('Test user already exists, skipping sign-up step');
-      // Sign out before continuing test
-      await signOut();
+      await cognitoClient.send(new AdminDeleteUserCommand({
+        UserPoolId: process.env.VITE_USER_POOL_ID,
+        Username: testUser.email
+      }));
     } catch (error) {
-      // Only attempt sign-up if user doesn't exist
-      if (error.message.includes('Incorrect username or password')) {
-        // 1. Sign Up
-        const signUpResult = await signUp({
-          username: testUser.email,
-          password: testUser.password,
-          options: {
-            userAttributes: {
-              email: testUser.email
-            }
-          }
-        });
-        expect(signUpResult.userId).toBeDefined();
-        expect(signUpResult.nextStep.signUpStep).toBe('CONFIRM_SIGN_UP');
-
-        // 2. Auto-confirm user with admin API
-        await cognitoClient.send(new AdminConfirmSignUpCommand({
-          UserPoolId: process.env.VITE_USER_POOL_ID,
-          Username: testUser.email
-        }));
-      } else {
-        throw error;
+      // Ignore if user doesn't exist
+      if (!error.message.includes('User does not exist')) {
+        console.error('Error during user cleanup:', error);
       }
     }
+  });
 
-    // Continue with rest of test...
+  test('should handle complete auth lifecycle via Amplify API', async ({ page }) => {
+    try {
+      // 1. Sign Up
+      const signUpResult = await signUp({
+        username: testUser.email,
+        password: testUser.password,
+        options: {
+          userAttributes: {
+            email: testUser.email
+          }
+        }
+      });
+      expect(signUpResult.userId).toBeDefined();
+      expect(signUpResult.nextStep.signUpStep).toBe('CONFIRM_SIGN_UP');
+    } catch (error) {
+      if (isEmailLimitError(error)) {
+        console.log(`${YELLOW}⚠️  AWS Email limit reached. Please try running the tests again tomorrow.${RESET}`);
+        console.log(`${YELLOW}Error details: ${error.message}${RESET}`);
+        test.skip(true, 'Skipping test due to AWS SES email limit - please retry tomorrow');
+        return;
+      }
+      throw error;
+    }
+
+    // 2. Auto-confirm user with admin API
+    await cognitoClient.send(new AdminConfirmSignUpCommand({
+      UserPoolId: process.env.VITE_USER_POOL_ID,
+      Username: testUser.email
+    }));
+
     // 3. Sign In
     const signInResult = await signIn({
       username: testUser.email,
@@ -80,6 +105,8 @@ test.describe('Auth API Backend Tests', () => {
 
     // 4. Get Current User
     const currentUser = await getCurrentUser();
+    expect(currentUser).toBeDefined();
+    
     const userAttributes = await fetchUserAttributes();
     expect(userAttributes.email).toBe(testUser.email);
 
@@ -102,7 +129,7 @@ test.describe('Auth API Backend Tests', () => {
     // 8. Delete Account
     await deleteUser();
 
-    // 9. Verify Account Deleted - Should Not Be Able to Sign In
+    // 9. Verify Account Deleted
     try {
       await signIn({
         username: testUser.email,
@@ -114,39 +141,39 @@ test.describe('Auth API Backend Tests', () => {
     }
   });
 
-  test('should handle invalid credentials', async () => {
-    try {
-      await signIn({
+  test('should handle invalid credentials', async ({ page }) => {
+    const testCases = [
+      {
         username: 'invalid-email',
-        password: testUser.password
-      });
-      throw new Error('Should not allow invalid email format');
-    } catch (error) {
-      expect(error.message).toContain('Incorrect username or password');
-    }
-
-    try {
-      await signIn({
+        password: testUser.password,
+        expectedError: 'Incorrect username or password'
+      },
+      {
         username: testUser.email,
-        password: 'weak'
-      });
-      throw new Error('Should not allow weak password');
-    } catch (error) {
-      expect(error.message).toContain('Incorrect username or password');
-    }
-
-    try {
-      await signIn({
+        password: 'weak',
+        expectedError: 'Incorrect username or password'
+      },
+      {
         username: 'nonexistent@example.com',
-        password: testUser.password
-      });
-      throw new Error('Should not allow sign in with non-existent user');
-    } catch (error) {
-      expect(error.message).toContain('Incorrect username or password');
+        password: testUser.password,
+        expectedError: 'Incorrect username or password'
+      }
+    ];
+
+    for (const testCase of testCases) {
+      try {
+        await signIn({
+          username: testCase.username,
+          password: testCase.password
+        });
+        throw new Error(`Should not allow sign in with ${testCase.username}`);
+      } catch (error) {
+        expect(error.message).toContain(testCase.expectedError);
+      }
     }
   });
 
-  test('should handle unauthorized access', async () => {
+  test('should handle unauthorized access', async ({ page }) => {
     try {
       await getCurrentUser();
       throw new Error('Should not allow access without sign in');
