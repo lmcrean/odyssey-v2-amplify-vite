@@ -24,7 +24,10 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL || 'http://localhost:5175',
     trace: 'on',
     screenshot: 'on',
-    video: 'on',
+    video: {
+      mode: 'on',
+      size: { width: 1280, height: 720 }
+    },
     actionTimeout: 15000,
     navigationTimeout: 15000,
     viewport: { width: 1280, height: 720 },
