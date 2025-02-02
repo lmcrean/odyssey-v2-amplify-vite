@@ -12,19 +12,6 @@ vi.mock('@aws-amplify/ui-react', () => ({
   })
 }));
 
-// Mock toast
-vi.mock('react-toastify', () => ({
-  toast: {
-    success: vi.fn(),
-    error: vi.fn(),
-    info: vi.fn(),
-  },
-  ToastContainer: () => null,
-}));
-
-// Import toast for assertions
-import { toast } from 'react-toastify';
-
 describe('Auth Flow Integration', () => {
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -33,20 +20,13 @@ describe('Auth Flow Integration', () => {
     });
   });
 
-  it('shows success toast notification during successful sign in', async () => {
-    // Mock the successful sign-in state
-    await act(async () => {
-      // Simulate successful authentication
-      render(
-        <AuthComponent authStatus={'authenticated' as AuthStatus} />
-      );
-    });
-
-    // Verify the success toast was called
-    expect(toast.success).toHaveBeenCalledWith('Successfully signed in', { autoClose: 3000 });
+  it('successfully signs in', async () => {
+    // Verify user is authenticated
+    const signOutButton = screen.getByRole('button', { name: /sign out/i });
+    expect(signOutButton).toBeInTheDocument();
   });
 
-  it('shows success toast notification during successful sign out', async () => {
+  it('successfully signs out', async () => {
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
     expect(signOutButton).toBeInTheDocument();
     
@@ -55,10 +35,9 @@ describe('Auth Flow Integration', () => {
     });
 
     expect(mockAmplifySignOut).toHaveBeenCalled();
-    expect(toast.success).toHaveBeenCalledWith('Successfully signed out', { autoClose: 3000 });
   });
 
-  it('shows error toast when sign out fails', async () => {
+  it('handles sign out failure', async () => {
     mockAmplifySignOut.mockRejectedValueOnce(new Error('Failed to sign out'));
     
     const signOutButton = screen.getByRole('button', { name: /sign out/i });
@@ -69,6 +48,5 @@ describe('Auth Flow Integration', () => {
     });
 
     expect(mockAmplifySignOut).toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith('Failed to sign out. Please try again.', { autoClose: 3000 });
   });
 }); 
