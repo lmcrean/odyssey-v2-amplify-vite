@@ -99,8 +99,28 @@ test.describe('Complete Auth Lifecycle', () => {
     await expect(page.getByRole('button', { name: /sign out/i }))
       .toBeVisible({ timeout: 5000 });
 
-    // Note: Display name changes are not supported in Amplify Gen2 yet
-    console.log('Skipping display name changes as they are not supported in Amplify Gen2');
+    // 6. Change display name three times
+    for (let i = 1; i <= 3; i++) {
+      console.log(`Attempting display name change ${i}`);
+      await page.getByTestId('open-change-display-name-modal').click();
+      const newName = `TestUser${i}${Date.now()}`;
+      console.log(`Setting new display name to: ${newName}`);
+      const nameInput = page.getByLabel(/new display name/i);
+      await nameInput.waitFor({ state: 'visible', timeout: 10000 });
+      await nameInput.fill(newName);
+      const submitButton = page.getByTestId('submit-change-display-name');
+      await submitButton.waitFor({ state: 'visible', timeout: 10000 });
+      await submitButton.click();
+      try {
+        await expect(page.getByText(/changing display name/i)).toBeVisible({ timeout: 10000 });
+        await expect(page.getByText(/display name changed successfully/i)).toBeVisible({ timeout: 10000 });
+        console.log(`Successfully changed display name to: ${newName}`);
+      } catch (error) {
+        console.error(`Failed to change display name to ${newName}:`, error);
+        await page.screenshot({ path: `display-name-change-error-${i}.png` });
+        throw error;
+      }
+    }
 
     // 7. Change password three times
     let currentPassword = password;
