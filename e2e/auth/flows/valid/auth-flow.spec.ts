@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Amplify } from 'aws-amplify';
-import { CognitoIdentityProviderClient, AdminGetUserCommand } from '@aws-sdk/client-cognito-identity-provider';
+import { CognitoIdentityProviderClient, AdminGetUserCommand, AdminCreateUserCommand, AdminSetUserPasswordCommand } from '@aws-sdk/client-cognito-identity-provider';
 import { fromEnv } from '@aws-sdk/credential-providers';
 import { fillSignInForm, clickSignIn } from '../../../utils/auth/form';
 import dotenv from 'dotenv';
@@ -85,7 +85,7 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
   });
 
   test('should complete UI sign-in and sign-out flow with existing user', async ({ page }) => {
-    // 1. First verify user exists in Cognito (backend check)
+    // 1. First create test user if it doesn't exist
     try {
       const getUserCommand = new AdminGetUserCommand({
         UserPoolId: process.env.VITE_USER_POOL_ID,
@@ -99,12 +99,38 @@ test.describe('Sign In and Sign Out Flow with Existing User', () => {
         enabled: userResponse.Enabled
       });
     } catch (error) {
-      console.error('Cognito error details:', {
-        code: error.Code,
-        message: error.message,
-        requestId: error.$metadata?.requestId
-      });
-      throw new Error(`Test user does not exist: ${error.message}`);
+      if (error.message.includes('User does not exist')) {
+        console.log('Test user does not exist, creating new user...');
+        
+        // Create user with AdminCreateUser (no email sent)
+        await cognitoClient.send(new AdminCreateUserCommand({
+          UserPoolId: process.env.VITE_USER_POOL_ID,
+          Username: existingUser.email,
+          UserAttributes: [
+            {
+              Name: 'email',
+              Value: existingUser.email
+            },
+            {
+              Name: 'email_verified',
+              Value: 'true'
+            }
+          ],
+          MessageAction: 'SUPPRESS'
+        }));
+
+        // Set permanent password
+        await cognitoClient.send(new AdminSetUserPasswordCommand({
+          UserPoolId: process.env.VITE_USER_POOL_ID,
+          Username: existingUser.email,
+          Password: existingUser.password,
+          Permanent: true
+        }));
+
+        console.log('Created new test user with AdminCreateUser');
+      } else {
+        throw error;
+      }
     }
 
     // 2. Fill in the sign-in form and submit
