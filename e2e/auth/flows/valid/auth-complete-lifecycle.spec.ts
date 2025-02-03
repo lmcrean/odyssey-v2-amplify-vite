@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { verifyTestUser } from '../../../utils/auth/backend/verify-test-user';
 import { deleteTestAccount } from '../../../utils/auth/backend/delete-test-account';
 import { createAndSignInUser } from '../../../utils/auth/create-and-sign-in-user';
+import { runPasswordChangeStressTest } from '../../../utils/auth/form/change-password-stress-test';
 
+// Increase test timeout to 2 minutes since we're doing multiple operations
 test.describe('Complete Auth Lifecycle', () => {
   let testUserEmail: string;
   let testUserPassword: string;
@@ -28,15 +30,24 @@ test.describe('Complete Auth Lifecycle', () => {
   });
 
   test('completes full auth lifecycle including account changes and deletion', async ({ page }) => {
+    // Set test timeout to 2 minutes
+    test.setTimeout(120000);
+    
     // Create and sign in user using utility
     const { email, password } = await createAndSignInUser(page);
     testUserEmail = email;
     testUserPassword = password;
 
+    // Wait for initial auth state to settle
+    await page.waitForLoadState('networkidle');
+
     // 6. Change display name three times
     for (let i = 1; i <= 3; i++) {
       console.log(`Attempting display name change ${i}`);
       try {
+        // Wait for network idle before starting
+        await page.waitForLoadState('networkidle');
+        
         // Wait for any previous toasts to disappear
         try {
           await page.waitForFunction(() => {
@@ -76,11 +87,15 @@ test.describe('Complete Auth Lifecycle', () => {
         await expect(page.getByText(/display name changed successfully/i)).toBeVisible({ timeout: 10000 });
         console.log(`Successfully changed display name to: ${newName}`);
 
+        // Wait for network idle after success
+        await page.waitForLoadState('networkidle');
+
         // Take a screenshot after success
         await page.screenshot({ path: `display-name-change-success-${i}.png` });
 
-        // Wait for the success toast to disappear
-        await page.waitForTimeout(3500); // Wait a bit longer than the autoClose time
+        // Wait for the success toast to disappear and network to be idle
+        await page.waitForTimeout(3500);
+        await page.waitForLoadState('networkidle');
       } catch (error) {
         console.error(`Failed to change display name in attempt ${i}:`, error);
         // Take a screenshot on error
@@ -95,45 +110,22 @@ test.describe('Complete Auth Lifecycle', () => {
       }
     }
 
-    // 7. Change password three times
-    let currentPassword = password;
-    for (let i = 1; i <= 3; i++) {
-      console.log(`Attempting password change ${i}`);
-      try {
-        const newPassword = `NewPass${i}123!@#`;
-        
-        // Open change password modal
-        const changePasswordButton = page.getByTestId('open-change-password-modal');
-        await expect(changePasswordButton).toBeVisible();
-        await changePasswordButton.click();
-        console.log('Clicked change password button');
+    // Wait for network idle before starting password changes
+    await page.waitForLoadState('networkidle');
 
-        // Fill in the form
-        const currentPasswordInput = page.getByLabel(/current password/i);
-        await currentPasswordInput.fill(currentPassword);
-        const newPasswordInput = page.getByLabel(/^new password$/i);
-        await newPasswordInput.fill(newPassword);
-        const confirmPasswordInput = page.getByLabel(/confirm.*password/i);
-        await confirmPasswordInput.fill(newPassword);
-        console.log('Filled password form');
+    // 7. Change password three times using the stress test utility
+    const { finalPassword } = await runPasswordChangeStressTest({
+      page,
+      initialPassword: testUserPassword,
+      userEmail: testUserEmail,
+      iterations: 3,
+      takeScreenshots: true,
+      waitBetweenAttempts: 2000
+    });
+    testUserPassword = finalPassword;
 
-        // Submit and wait for any response
-        const submitButton = page.getByTestId('submit-change-password');
-        await submitButton.click();
-        console.log('Submitted password change');
-
-        // Simple wait for UI to settle
-        await page.waitForTimeout(2000);
-
-        // Update current password for next iteration
-        currentPassword = newPassword;
-        console.log(`Completed password change attempt ${i}`);
-
-      } catch (error) {
-        console.error(`Failed to change password in attempt ${i}:`, error);
-        throw error;
-      }
-    }
+    // Wait for network idle before starting account deletion
+    await page.waitForLoadState('networkidle');
 
     // 8. Delete account through UI
     console.log('Starting account deletion process...');
@@ -174,6 +166,9 @@ test.describe('Complete Auth Lifecycle', () => {
       await page.screenshot({ path: 'confirm-button-error.png' });
       throw error;
     }
+    
+    // Wait for network idle after deletion request
+    await page.waitForLoadState('networkidle');
     
     // Verify account deletion success with increased timeout
     await expect(page.getByText(/account deleted successfully/i))
