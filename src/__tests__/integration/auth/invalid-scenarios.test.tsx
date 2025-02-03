@@ -272,7 +272,6 @@ vi.mock('aws-amplify/auth', () => ({
 
 import { AuthComponent } from '../../../components/auth';
 import { mockSignOut as mockAmplifySignOut } from '../../mocks/auth/amplify/ui-react/Authenticator';
-import { deleteUser } from 'aws-amplify/auth';
 import { renderWithAuth } from '../../utils/test-utils';
 
 describe('Invalid Auth Scenarios', () => {
