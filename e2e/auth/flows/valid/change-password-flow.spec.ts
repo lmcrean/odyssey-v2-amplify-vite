@@ -40,7 +40,8 @@ test.describe('Change Password Flow', () => {
       initialPassword: password,
       iterations: 3,
       takeScreenshots: true,
-      waitBetweenAttempts: 2000
+      waitBetweenAttempts: 2000,
+      userEmail: testUserEmail
     });
   });
 }); 
