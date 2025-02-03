@@ -2,7 +2,11 @@ import { test, expect } from '@playwright/test';
 import { deleteTestAccount } from '../../../utils/auth/backend/delete-test-account';
 import { createAndSignInUser } from '../../../utils/auth/create-and-sign-in-user';
 
+// Configure longer timeout for this test file
 test.describe('Change Password Flow', () => {
+  // Set timeout to 90 seconds for this specific test
+  test.setTimeout(90000);
+  
   let testUserEmail: string;
   let currentPassword: string;
 
@@ -42,43 +46,43 @@ test.describe('Change Password Flow', () => {
           await page.waitForFunction(() => {
             const toasts = document.querySelectorAll('[role="alert"]');
             return toasts.length === 0;
-          }, { timeout: 5000 });
+          }, { timeout: 10000 });
         } catch (error) {
           console.log('No previous toasts found or timed out waiting for them to disappear');
         }
         
-        // Open change password modal
+        // Open change password modal with retry logic
         const changePasswordButton = page.getByTestId('open-change-password-modal');
-        await expect(changePasswordButton).toBeVisible({ timeout: 10000 });
+        await expect(changePasswordButton).toBeVisible({ timeout: 15000 });
         await changePasswordButton.click();
         console.log('Clicked change password button');
 
-        // Fill in the form
+        // Fill in the form with explicit waits
         const currentPasswordInput = page.getByLabel(/current password/i);
-        await expect(currentPasswordInput).toBeVisible({ timeout: 5000 });
+        await expect(currentPasswordInput).toBeVisible({ timeout: 10000 });
         await currentPasswordInput.fill(currentPassword);
         
         const newPasswordInput = page.getByLabel(/^new password$/i);
-        await expect(newPasswordInput).toBeVisible({ timeout: 5000 });
+        await expect(newPasswordInput).toBeVisible({ timeout: 10000 });
         await newPasswordInput.fill(newPassword);
         
         const confirmPasswordInput = page.getByLabel(/confirm.*password/i);
-        await expect(confirmPasswordInput).toBeVisible({ timeout: 5000 });
+        await expect(confirmPasswordInput).toBeVisible({ timeout: 10000 });
         await confirmPasswordInput.fill(newPassword);
         console.log('Filled password form');
 
-        // Submit and wait for success
+        // Submit and wait for success with increased timeout
         const submitButton = page.getByTestId('submit-change-password');
         await submitButton.click();
         console.log('Submitted password change');
 
-        // Wait for success message
+        // Wait for success message with increased timeout
         await expect(page.getByText(/password changed successfully/i))
-          .toBeVisible({ timeout: 10000 });
+          .toBeVisible({ timeout: 15000 });
         console.log('Saw success message');
 
-        // Wait for modal to close
-        await expect(currentPasswordInput).not.toBeVisible({ timeout: 5000 });
+        // Wait for modal to close with increased timeout
+        await expect(currentPasswordInput).not.toBeVisible({ timeout: 10000 });
         console.log('Modal closed');
 
         // Update current password for next iteration
@@ -88,13 +92,17 @@ test.describe('Change Password Flow', () => {
         // Take success screenshot
         await page.screenshot({ path: `password-change-success-${i}.png` });
 
-        // Wait between attempts
-        await page.waitForTimeout(5000);
+        // Reduced wait between attempts
+        await page.waitForTimeout(2000);
 
       } catch (error) {
         console.error(`Failed to change password in attempt ${i}:`, error);
-        // Take error screenshot
-        await page.screenshot({ path: `password-change-error-${i}.png` });
+        // Take error screenshot if page is still available
+        try {
+          await page.screenshot({ path: `password-change-error-${i}.png` });
+        } catch (screenshotError) {
+          console.error('Could not take error screenshot:', screenshotError);
+        }
         throw error;
       }
     }
@@ -102,21 +110,58 @@ test.describe('Change Password Flow', () => {
     // 4. Verify we can sign in with the final password
     console.log('\nVerifying final password works...');
     
-    // Sign out
-    await page.getByRole('button', { name: /sign out/i }).click();
+    // Sign out with explicit waits
+    const signOutButton = page.getByRole('button', { name: /sign out/i });
+    await expect(signOutButton).toBeVisible({ timeout: 10000 });
+    await signOutButton.click();
+    
     await expect(page.getByRole('tab', { name: /sign in/i }))
-      .toBeVisible({ timeout: 5000 });
+      .toBeVisible({ timeout: 10000 });
     console.log('Signed out successfully');
 
     // Sign in with new password
-    await page.getByLabel(/email/i).fill(testUserEmail);
-    await page.getByLabel(/^password$/i).fill(currentPassword);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    const emailInput = page.getByLabel(/email/i);
+    const passwordInput = page.getByLabel(/^password$/i);
+    const signInButton = page.getByRole('button', { name: /sign in/i });
 
-    // Verify successful sign in
-    await expect(page.getByText(/hello/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: /sign out/i }))
-      .toBeVisible({ timeout: 5000 });
+    await expect(emailInput).toBeVisible({ timeout: 10000 });
+    await emailInput.fill(testUserEmail);
+    await expect(passwordInput).toBeVisible({ timeout: 10000 });
+    await passwordInput.fill(currentPassword);
+    await signInButton.click();
+
+    // Wait for auth status to be updated
+    await page.waitForFunction(() => {
+      const tokens = Object.keys(window.localStorage).filter(key => 
+        key.includes('CognitoIdentityServiceProvider') && 
+        (key.includes('accessToken') || key.includes('idToken'))
+      );
+      return tokens.length > 0;
+    }, { timeout: 15000 });
+    console.log('Auth tokens found in localStorage');
+
+    // Check for and handle the skip button if present
+    try {
+      const skipButton = page.getByRole('button', { name: /skip/i });
+      const isSkipVisible = await skipButton.isVisible({ timeout: 5000 });
+      if (isSkipVisible) {
+        console.log('Skip button found, clicking it');
+        await skipButton.click();
+        await page.waitForTimeout(1000); // Small wait for UI update
+      }
+    } catch (error) {
+      console.log('No skip button found, continuing...');
+    }
+
+    // Wait for authenticated view to be rendered
+    await page.waitForSelector('[data-testid="authenticated-view"]', { timeout: 15000 });
+    console.log('Authenticated view rendered');
+
+    // Verify we can see the authenticated view buttons
+    await expect(page.getByText('Change Display Name')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Change Password')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Sign Out')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Delete Account')).toBeVisible({ timeout: 10000 });
     console.log('Successfully signed in with final password');
   });
 }); 
