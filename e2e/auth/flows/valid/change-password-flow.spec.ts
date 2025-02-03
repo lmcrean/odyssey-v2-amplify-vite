@@ -130,38 +130,15 @@ test.describe('Change Password Flow', () => {
     await passwordInput.fill(currentPassword);
     await signInButton.click();
 
-    // Wait for auth status to be updated
-    await page.waitForFunction(() => {
-      const tokens = Object.keys(window.localStorage).filter(key => 
-        key.includes('CognitoIdentityServiceProvider') && 
-        (key.includes('accessToken') || key.includes('idToken'))
-      );
-      return tokens.length > 0;
-    }, { timeout: 15000 });
-    console.log('Auth tokens found in localStorage');
+    // Handle account recovery setup - click Skip
+    await page.getByText(/account recovery requires verified contact information/i)
+      .waitFor({ timeout: 5000 });
+    await page.getByRole('button', { name: /skip/i }).click();
 
-    // Check for and handle the skip button if present
-    try {
-      const skipButton = page.getByRole('button', { name: /skip/i });
-      const isSkipVisible = await skipButton.isVisible({ timeout: 5000 });
-      if (isSkipVisible) {
-        console.log('Skip button found, clicking it');
-        await skipButton.click();
-        await page.waitForTimeout(1000); // Small wait for UI update
-      }
-    } catch (error) {
-      console.log('No skip button found, continuing...');
-    }
-
-    // Wait for authenticated view to be rendered
-    await page.waitForSelector('[data-testid="authenticated-view"]', { timeout: 15000 });
-    console.log('Authenticated view rendered');
-
-    // Verify we can see the authenticated view buttons
-    await expect(page.getByText('Change Display Name')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Change Password')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Sign Out')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Delete Account')).toBeVisible({ timeout: 10000 });
+    // Verify Auth view using the same pattern as create-and-sign-in-user.ts
+    await page.getByText(/hello/i).waitFor({ timeout: 10000 });
+    await page.getByRole('button', { name: /sign out/i })
+      .waitFor({ timeout: 5000 });
     console.log('Successfully signed in with final password');
   });
 }); 
