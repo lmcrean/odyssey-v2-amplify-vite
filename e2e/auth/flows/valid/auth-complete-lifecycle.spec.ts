@@ -1,9 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { verifyTestUser } from '../../../utils/auth/backend/verify-test-user';
 import { deleteTestAccount } from '../../../utils/auth/backend/delete-test-account';
+import { createAndSignInUser } from '../../../utils/auth/create-and-sign-in-user';
 
 test.describe('Complete Auth Lifecycle', () => {
   let testUserEmail: string;
+  let testUserPassword: string;
 
   // Move cleanup to afterAll instead of afterEach
   test.afterAll(async () => {
@@ -26,106 +28,10 @@ test.describe('Complete Auth Lifecycle', () => {
   });
 
   test('completes full auth lifecycle including account changes and deletion', async ({ page }) => {
-    // 1. Create random user with UI - use a fixed test email if we hit limits
-    const timestamp = Date.now();
-    testUserEmail = process.env.TEST_USER_EMAIL || `test-${timestamp}@example.com`;
-    const password = process.env.TEST_USER_PASSWORD || 'Test123!@#';
-
-    console.log('Starting test with email:', testUserEmail);
-
-    // Click the Create Account tab
-    await page.getByRole('tab', { name: /create account/i }).click();
-    await page.waitForTimeout(500); // Small delay for tab switch
-
-    // 2. Sign up with UI
-    await page.getByLabel(/email/i).fill(testUserEmail);
-    await page.getByLabel(/^password$/i).fill(password);
-    await page.getByLabel(/confirm password/i).fill(password);
-    
-    // Debug: Log form values before submission
-    console.log('Form values before submission:', {
-      email: await page.getByLabel(/email/i).inputValue(),
-      password: '***',
-      confirmPassword: '***'
-    });
-
-    // Click create account and wait for response
-    const createAccountButton = page.getByRole('button', { name: /create account/i });
-    await Promise.all([
-      page.waitForResponse(response => response.url().includes('cognito') || response.url().includes('oauth2')),
-      createAccountButton.click()
-    ]);
-
-    // Wait for network requests to complete
-    await page.waitForLoadState('networkidle');
-
-    // Check for error messages first
-    const errorLocator = page.getByText(/error|failed|invalid|exceeded.*limit/i);
-    const hasError = await errorLocator.isVisible();
-    if (hasError) {
-      const errorText = await errorLocator.textContent();
-      console.error('Found error message:', errorText);
-      
-      // If we hit email limits, we'll try to use the test account directly
-      if (errorText?.toLowerCase().includes('exceeded') && errorText?.toLowerCase().includes('limit')) {
-        console.log('Hit email limit, attempting to use test account directly...');
-        // Skip to sign in since we're using a pre-verified account
-        await page.getByRole('tab', { name: /sign in/i }).click();
-        await page.waitForTimeout(500);
-      } else {
-        throw new Error(`Signup failed with error: ${errorText}`);
-      }
-    } else {
-      // Only wait for verification if we're not using a pre-verified account
-      // Wait for confirmation screen with longer timeout and more specific text
-      const confirmationTexts = [
-        /verify your email/i,
-        /confirm your email/i,
-        /confirmation code/i,
-        /verification code/i,
-        /check your email/i
-      ];
-
-      let confirmationFound = false;
-      for (const text of confirmationTexts) {
-        try {
-          await expect(page.getByText(text)).toBeVisible({ timeout: 5000 });
-          confirmationFound = true;
-          console.log(`Found confirmation text matching: ${text}`);
-          break;
-        } catch (error) {
-          console.log(`Did not find text matching: ${text}`);
-        }
-      }
-
-      if (!confirmationFound) {
-        console.error('Could not find any confirmation screen text');
-        await page.screenshot({ path: 'confirmation-screen-error.png' });
-        throw new Error('Could not find confirmation screen');
-      }
-
-      // 3. Auto-verify the user using AWS Admin API
-      await verifyTestUser(testUserEmail);
-
-      // After verification, we need to reload the page to get back to the sign-in form
-      await page.reload();
-      await page.waitForLoadState('networkidle');
-    }
-
-    // 4. Sign in with UI
-    await page.getByLabel(/email/i).fill(testUserEmail);
-    await page.getByLabel(/^password$/i).fill(password);
-    await page.getByRole('button', { name: /sign in/i }).click();
-
-    // Handle account recovery setup - click Skip
-    await expect(page.getByText(/account recovery requires verified contact information/i))
-      .toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: /skip/i }).click();
-
-    // 5. Verify Auth view
-    await expect(page.getByText(/hello/i)).toBeVisible({ timeout: 10000 });
-    await expect(page.getByRole('button', { name: /sign out/i }))
-      .toBeVisible({ timeout: 5000 });
+    // Create and sign in user using utility
+    const { email, password } = await createAndSignInUser(page);
+    testUserEmail = email;
+    testUserPassword = password;
 
     // 6. Change display name three times
     for (let i = 1; i <= 3; i++) {
