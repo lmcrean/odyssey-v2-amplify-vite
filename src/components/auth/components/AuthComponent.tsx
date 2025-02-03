@@ -73,7 +73,6 @@ const customStyles = `
 `;
 
 export const AuthComponent: React.FC<AuthComponentProps> = () => {
-
   return (
     <div className="min-h-screen bg-gray-900 flex items-center justify-center">
       <style>{customStyles}</style>
@@ -91,7 +90,9 @@ export const AuthComponent: React.FC<AuthComponentProps> = () => {
       />
       <div className="w-full max-w-md">
         <Authenticator>
-          {(props) => <AuthenticatorContent {...props} />}
+          {(props) => (
+            <AuthenticatorContent {...props} />
+          )}
         </Authenticator>
       </div>
     </div>
