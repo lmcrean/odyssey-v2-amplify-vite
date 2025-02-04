@@ -38,6 +38,33 @@ const customStyles = `
     color:rgba(222, 222, 223, 0.89) !important;
   }
 
+  /* Password visibility toggle button styles */
+  .amplify-field-group__outer-end button {
+    background-color: transparent !important;
+    border: none !important;
+    color: rgba(222, 222, 223, 0.7) !important;
+    padding: 0 8px !important;
+    margin-left: -40px !important;
+    z-index: 2 !important;
+  }
+
+  .amplify-field-group__outer-end button:hover {
+    color: rgba(222, 222, 223, 0.9) !important;
+    background-color: transparent !important;
+  }
+
+  /* Hide the button background and adjust the icon */
+  .amplify-field-group__outer-end button > span {
+    padding: 0 !important;
+    background: none !important;
+  }
+
+  /* Ensure the password input has space for the icon */
+  .amplify-field-group input[type="password"],
+  .amplify-field-group input[type="text"] {
+    padding-right: 40px !important;
+  }
+
   .amplify-tabs__item:hover {
     background-color:rgba(24, 29, 88, 0.63) !important;
     color:rgba(228, 235, 206, 0.89) !important;
